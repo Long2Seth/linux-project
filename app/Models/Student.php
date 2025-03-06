@@ -13,7 +13,7 @@ class Student extends Authenticatable
     /**
      * The attributes that are mass assignable.
      *
-     * @var list<string>
+     * @var array<string>
      */
     protected $fillable = [
         'slug',
@@ -34,7 +34,7 @@ class Student extends Authenticatable
     /**
      * The attributes that should be hidden for serialization.
      *
-     * @var list<string>
+     * @var array<string>
      */
     protected $hidden = [
         'password',
@@ -44,27 +44,11 @@ class Student extends Authenticatable
     /**
      * The attributes that should be cast.
      *
+     * @var array<string, string>
      */
-    protected function casts(): array
-    {
-        return [
-            'date_of_birth' => 'datetime',
-            'start_learn' => 'datetime',
-            'end_learn' => 'datetime',
-        ];
-    }
-
-    /**
-     * Boot method to set default values.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($student) {
-            $student->email = strtolower($student->first_name . $student->last_name . '.2021@gmail.com');
-            $student->password = bcrypt('Student@2021');
-            $student->department = 'Information Technology';
-        });
-    }
+    protected $casts = [
+        'date_of_birth' => 'datetime',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+    ];
 }

@@ -15,7 +15,7 @@ export default function Students() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <section className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                {/*<StudentComponent />*/}
+                <StudentComponent />
             </section>
         </AppLayout>
     );

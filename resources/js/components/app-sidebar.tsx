@@ -19,7 +19,7 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'All Students',
+        title: 'Students',
         url: '/students',
         icon: TbUsers,
     },
