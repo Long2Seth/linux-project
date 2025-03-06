@@ -20,55 +20,116 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { useMemo, useState } from "react";
+import {
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem,
+} from "@/components/ui/select";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { Pagination } from '@/components/pagination';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { StudentType } from '@/lib/types/StudentType';
 import { columnStudent } from '@/components/student/colunm';
-import { usePage } from '@inertiajs/react';
+import { StudentType } from '@/types/StudentType';
+import { usePage, router } from '@inertiajs/react';
+
+interface PaginationMeta {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+}
+
+interface FilterParams {
+    page?: number;
+    per_page?: number;
+    search?: string;
+    department?: string;
+    status?: string;
+}
 
 export function StudentComponent() {
-    const { props } = usePage(); // Get props from Inertia
-    const students: StudentType[] = props.students || []; // Access students from props
-    const meta = props.meta || { current_page: 1, last_page: 1, per_page: 20, total: 0 };
+    const { props } = usePage<{
+        students: StudentType[];
+        meta: PaginationMeta;
+    }>();
+
+    const students: StudentType[] = props.students ?? [];
+    const meta: PaginationMeta = props.meta ?? {
+        current_page: 1,
+        last_page: 1,
+        per_page: 20,
+        total: 0
+    };
 
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = useState({});
-    const [currentPage, setCurrentPage] = useState(meta.current_page);
-    const [itemsPerPage, setItemsPerPage] = useState(meta.per_page);
-    const [selectedDepartment, setSelectedDepartment] = useState("all");
-    const [selectedStatus, setSelectedStatus] = useState("all");
-    const [studentName, setStudentName] = useState("");
+    const [currentPage, setCurrentPage] = useState<number>(meta.current_page);
+    const [itemsPerPage, setItemsPerPage] = useState<number>(meta.per_page);
+    const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+    const [selectedStatus, setSelectedStatus] = useState<string>("all");
+    const [studentName, setStudentName] = useState<string>("");
+
+    // Memoized updateFilters function to prevent unnecessary re-renders
+    const updateFilters = useCallback((params: FilterParams = {}) => {
+        router.get(
+            '/students',
+            {
+                page: currentPage,
+                per_page: itemsPerPage,
+                search: studentName.trim(), // Trim to avoid empty spaces
+                department: selectedDepartment === "all" ? undefined : selectedDepartment,
+                status: selectedStatus === "all" ? undefined : selectedStatus,
+                ...params,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+                onSuccess: () => {
+                    console.log('Filter update successful'); // Debug log
+                },
+                onError: (errors) => {
+                    console.error('Filter update failed:', errors); // Debug log
+                }
+            }
+        );
+    }, [currentPage, itemsPerPage, studentName, selectedDepartment, selectedStatus]);
+
+    // Handle page changes
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        updateFilters({ page });
+    };
+
+    // Handle items per page changes
+    const handleItemsPerPageChange = (perPage: number) => {
+        setItemsPerPage(perPage);
+        setCurrentPage(1);
+        updateFilters({ per_page: perPage, page: 1 });
+    };
+
+    // Handle filter changes with debounce
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setCurrentPage(1); // Reset to page 1 on filter change
+            updateFilters({ page: 1 });
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [studentName, selectedDepartment, selectedStatus, updateFilters]);
 
     const departments = useMemo(() =>
-            Array.from(new Set(students.map(student => student.department))),
+            Array.from(new Set(students.map(student => student.department_name))),
         [students]
     );
 
-    const filteredData = useMemo(() => {
-        return students.filter((student) => {
-            const matchesName = `${student.first_name} ${student.last_name}`
-                .toLowerCase()
-                .includes(studentName.toLowerCase());
-            const matchesDepartment = selectedDepartment === "all" ||
-                student.department === selectedDepartment;
-            const matchesStatus = selectedStatus === "all" ||
-                student.status === selectedStatus;
-            return matchesName && matchesDepartment && matchesStatus;
-        });
-    }, [selectedDepartment, selectedStatus, studentName, students]);
-
-    const paginatedData = useMemo(
-        () => filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
-        [filteredData, currentPage, itemsPerPage]
-    );
-
     const table = useReactTable({
-        data: paginatedData,
+        data: students,
         columns: columnStudent,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -96,7 +157,10 @@ export function StudentComponent() {
                                 STUDENT INFORMATION
                             </h1>
                         </div>
-                        <Button className="text-secondary-color-text rounded-[6px] bg-primary-color hover:bg-primary-color/80">
+                        <Button
+                            className="text-secondary-color-text rounded-[6px] bg-primary-color hover:bg-primary-color/80"
+                            onClick={() => router.visit('/students/create')}
+                        >
                             Create Student
                         </Button>
                     </div>
@@ -111,24 +175,40 @@ export function StudentComponent() {
                         className="w-full border-[1px] h-[50px] text-md md:text-lg bg-white border-light-border-color rounded-[6px] placeholder:text-gray-400 text-primary-color-text dark:backdrop-blur dark:bg-opacity-0 dark:text-secondary-color-text"
                     />
                     <section className="w-full lg:w-auto flex flex-col sm:flex-row gap-2">
-                        <Select onValueChange={setSelectedDepartment}>
-                            <SelectTrigger className={`w-full lg:max-w-[300px] h-[50px] border-[1px] text-md md:text-lg bg-white border-light-border-color rounded-[6px] placeholder:text-gray-400 ${selectedDepartment === "all" ? "text-gray-400" : "text-black"} dark:backdrop-blur dark:bg-opacity-5 dark:text-secondary-color-text`}>
-                                <SelectValue placeholder="Department"/>
+                        <Select
+                            onValueChange={(value) => {
+                                setSelectedDepartment(value);
+                            }}
+                            value={selectedDepartment}
+                        >
+                            <SelectTrigger
+                                className={`w-full lg:max-w-[300px] h-[50px] border-[1px] text-md md:text-lg bg-white border-light-border-color rounded-[6px] placeholder:text-gray-400 ${selectedDepartment === "all" ? "text-gray-400" : "text-black"} dark:backdrop-blur dark:bg-opacity-5 dark:text-secondary-color-text`}
+                            >
+                                <SelectValue placeholder="Department" />
                             </SelectTrigger>
                             <SelectContent className="w-full lg:max-w-[300px] border-[1px] text-md md:text-lg bg-white border-light-border-color rounded-[6px] text-primary-color-text dark:backdrop-blur dark:bg-opacity-5 dark:text-secondary-color-text">
-                                <SelectItem value="all">All</SelectItem>
+                                <SelectItem value="all">All Departments</SelectItem>
                                 {departments.map(department => (
-                                    <SelectItem key={department} value={department}>{department}</SelectItem>
+                                    <SelectItem key={department} value={department}>
+                                        {department}
+                                    </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
 
-                        <Select onValueChange={setSelectedStatus}>
-                            <SelectTrigger className={`w-full lg:max-w-[250px] h-[50px] border-[1px] text-md md:text-lg bg-white border-light-border-color rounded-[6px] placeholder:text-gray-400 ${selectedStatus === "all" ? "text-gray-400" : "text-black"} dark:backdrop-blur dark:bg-opacity-5 dark:text-secondary-color-text`}>
-                                <SelectValue placeholder="Status"/>
+                        <Select
+                            onValueChange={(value) => {
+                                setSelectedStatus(value);
+                            }}
+                            value={selectedStatus}
+                        >
+                            <SelectTrigger
+                                className={`w-full lg:max-w-[250px] h-[50px] border-[1px] text-md md:text-lg bg-white border-light-border-color rounded-[6px] placeholder:text-gray-400 ${selectedStatus === "all" ? "text-gray-400" : "text-black"} dark:backdrop-blur dark:bg-opacity-5 dark:text-secondary-color-text`}
+                            >
+                                <SelectValue placeholder="Status" />
                             </SelectTrigger>
                             <SelectContent className="w-full lg:max-w-[250px] border-[1px] text-md md:text-lg bg-white border-light-border-color rounded-[6px] text-primary-color-text dark:backdrop-blur dark:bg-opacity-0 dark:text-secondary-color-text">
-                                <SelectItem value="all">All</SelectItem>
+                                <SelectItem value="all">All Statuses</SelectItem>
                                 <SelectItem value="active">Active</SelectItem>
                                 <SelectItem value="inactive">Inactive</SelectItem>
                             </SelectContent>
@@ -178,9 +258,8 @@ export function StudentComponent() {
                                         colSpan={columnStudent.length}
                                         className="h-20 text-center text-lg"
                                     >
-                                        <div className="flex w-full justify-center items-center">
-                                            <img src="/no-data.png" alt="noData" width={50} height={50}/>
-                                            <span>No results.</span>
+                                        <div className="flex w-full justify-center items-center gap-2">
+                                            <span className="text-4xl font-semibold text-red-500">No results found.</span>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -189,11 +268,11 @@ export function StudentComponent() {
                     </Table>
                 </div>
                 <Pagination
-                    totalItems={meta.total} // Use total from meta
+                    totalItems={meta.total}
                     itemsPerPage={itemsPerPage}
                     currentPage={currentPage}
-                    onPageChange={setCurrentPage}
-                    onItemsPerPageChange={setItemsPerPage}
+                    onPageChange={handlePageChange}
+                    onItemsPerPageChange={handleItemsPerPageChange}
                 />
             </section>
         </section>

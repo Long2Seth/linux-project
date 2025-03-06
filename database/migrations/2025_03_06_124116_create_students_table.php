@@ -21,9 +21,10 @@ return new class extends Migration
             $table->string('address');
             $table->date('start_date');
             $table->date('end_date')->nullable();
-            $table->string('department')->default('Information Technology');
+            $table->string('department_name')->default('Information Technology');
             $table->string('phone_number');
             $table->string('email')->unique();
+            $table->boolean('status');
             $table->string('password');
             $table->timestamps();
         });

@@ -26,7 +26,7 @@ class StudentResponse
             'address' => $this->student->address,
             'start_date' => $this->student->start_date,
             'end_date' => $this->student->end_date,
-            'department' => $this->student->department,
+            'department_name' => $this->student->department_name,
             'phone_number' => $this->student->phone_number,
             'email' => $this->student->email,
             'status' => $this->student->status,

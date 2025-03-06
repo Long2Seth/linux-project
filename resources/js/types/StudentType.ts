@@ -1,5 +1,4 @@
 export type StudentType = {
-    id: number;
     slug: string;
     first_name: string;
     last_name: string;
@@ -8,7 +7,7 @@ export type StudentType = {
     address: string;
     start_date: string;
     end_date: string;
-    department: string;
+    department_name: string;
     phone_number: string;
     email: string;
     status: string;

@@ -21,7 +21,16 @@ export const columnStudent: ColumnDef<StudentType>[] = [
             <DataTableColumnHeader className="min-w-[150px]" column={column} title="FIRST NAME" />
         ),
         cell: ({ row }) => (
-            <div>{`${row.original.first_name} ${row.original.last_name}`}</div>
+            <div>{`${row.original.first_name}`}</div>
+        ),
+    },
+    {
+        accessorKey: "last_name",
+        header: ({ column }) => (
+            <DataTableColumnHeader className="min-w-[150px]" column={column} title="LAST NAME" />
+        ),
+        cell: ({ row }) => (
+            <div>{`${row.original.last_name}`}</div>
         ),
     },
     {
@@ -55,9 +64,9 @@ export const columnStudent: ColumnDef<StudentType>[] = [
         ),
     },
     {
-        accessorKey: "department",
+        accessorKey: "department_name",
         header: ({ column }) => (
-            <DataTableColumnHeader className="min-w-[150px]" column={column} title="DEPARTMENT" />
+            <DataTableColumnHeader className="min-w-[150px]" column={column} title="DEPARTMENT NAME" />
         ),
     },
     {
