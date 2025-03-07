@@ -5,22 +5,27 @@ import { cn } from '@/lib/utils';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
+import { IoSettingsOutline } from "react-icons/io5";
+import { TbPasswordFingerprint } from "react-icons/tb";
+import { MdOutlineChangeCircle } from "react-icons/md";
+
+
 
 const sidebarNavItems: NavItem[] = [
     {
         title: 'Profile',
         url: '/settings/profile',
-        icon: null,
+        icon: IoSettingsOutline,
     },
     {
         title: 'Password',
         url: '/settings/password',
-        icon: null,
+        icon: TbPasswordFingerprint,
     },
     {
         title: 'Appearance',
         url: '/settings/appearance',
-        icon: null,
+        icon: MdOutlineChangeCircle,
     },
 ];
 

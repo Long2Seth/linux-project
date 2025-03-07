@@ -10,5 +10,14 @@ export type StudentType = {
     department_name: string;
     phone_number: string;
     email: string;
-    status: string;
+    status: boolean;
+}
+export type StudentFormData = {
+    first_name: string;
+    last_name: string;
+    gender: string;
+    date_of_birth: string;
+    start_date: string;
+    phone_number: string;
+    address: string;
 }

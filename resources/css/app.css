@@ -158,3 +158,6 @@
         @apply bg-background text-foreground;
     }
 }
+body {
+    font-family: 'KoHo', sans-serif;
+}

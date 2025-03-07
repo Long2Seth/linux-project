@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Student\StudentRequest;
 use App\Models\Student;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
@@ -19,7 +20,6 @@ class StudentController extends Controller
 
             $query = Student::query();
 
-            // Apply search filter
             if ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('first_name', 'like', "%{$search}%")
@@ -27,14 +27,12 @@ class StudentController extends Controller
                 });
             }
 
-            // Apply department filter
             if ($department) {
-                $query->where('department_name', $department);
+                $query->where('department', $department);
             }
 
-            // Apply status filter
-            if ($status) {
-                $query->where('status', $status);
+            if ($status !== null) {
+                $query->where('status', $status === 'true' ? 1 : 0);
             }
 
             $students = $query->paginate($perPage, ['*'], 'page', $page);
@@ -55,4 +53,25 @@ class StudentController extends Controller
             ])->withStatus(500);
         }
     }
+
+    public function store(StudentRequest $request)
+    {
+        try {
+            $validated = $request->validated();
+            $student = Student::create($validated);
+
+            return redirect()->route('students.index')->with('success', 'Student created successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Failed to create student: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'validated_data' => $request->validated(),
+                'exception' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()->withErrors([
+                'error' => 'Failed to create student: ' . $e->getMessage(),
+            ])->withInput();
+        }
+    }
+
 }
