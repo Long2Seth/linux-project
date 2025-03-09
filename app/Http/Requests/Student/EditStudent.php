@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 
-class StudentRequest extends FormRequest
+class EditStudent extends FormRequest
 {
     public function authorize()
     {
@@ -23,12 +23,7 @@ class StudentRequest extends FormRequest
             'start_date' => ['required', 'date', 'after_or_equal:today'],
             'phone_number' => ['required', 'string', 'max:20', 'regex:/^[+]?[0-9]{8,15}$/'],
             'address' => ['required', 'string', 'max:500'],
-            'slug' => ['required', 'string', 'unique:students,slug'],
-            'email' => ['required', 'email', 'unique:students,email'],
-            'password' => ['required', 'string'],
             'end_date' => ['required', 'date', 'after:start_date'],
-            'department_name' => ['required', 'string'],
-            'status' => ['required', 'boolean'],
         ];
     }
 
@@ -37,17 +32,13 @@ class StudentRequest extends FormRequest
         $firstName = $this->input('first_name');
         $lastName = $this->input('last_name');
         $dateOfBirth = $this->input('date_of_birth');
-        $startDate = $this->input('start_date');
 
         $this->merge([
             'slug' => strtolower($firstName . "-" . $lastName. "-" . str_replace('-', '', $dateOfBirth)),
-            'end_date' => Carbon::parse($startDate)->addDays(1460)->toDateString(),
-            'department_name' => 'Information Technology',
             'email' => strtolower($firstName . $lastName . Carbon::now()->year . '@gmail.com'),
-            'password' => 'Student@' . Carbon::now()->year,
-            'status' => true,
         ]);
     }
+
 
     public function messages(): array
     {
@@ -63,8 +54,8 @@ class StudentRequest extends FormRequest
             'phone_number.required' => 'Phone number is required.',
             'phone_number.regex' => 'Phone number must be a valid number (8-15 digits, optional + prefix).',
             'address.required' => 'Address is required.',
-            'slug.unique' => 'The generated slug is already taken.',
-            'email.unique' => 'The generated email is already taken.',
+            'end_date.required' => 'End date is required.',
+            'end_date.after' => 'End date must be after the start date.',
         ];
     }
 }

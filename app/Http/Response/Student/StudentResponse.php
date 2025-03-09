@@ -30,6 +30,8 @@ class StudentResponse
             'phone_number' => $this->student->phone_number,
             'email' => $this->student->email,
             'status' => $this->student->status,
+            'is_graduate' => $this->student->is_graduate,
+            'is_deleted' => $this->student->is_deleted,
         ];
     }
 

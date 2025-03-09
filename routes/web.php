@@ -9,12 +9,16 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [StudentController::class, 'dashboardStats'])->name('dashboard');
 
-    Route::get('/students', [StudentController::class, 'index'])->name('students.index');
-    Route::post('/students', [StudentController::class, 'store'])->name('students.store');
+    Route::prefix('students')->name('students.')->group(function () {
+        Route::get('/', [StudentController::class, 'index'])->name('index');
+        Route::post('/', [StudentController::class, 'store'])->name('store');
+        Route::get('/{id}', [StudentController::class, 'show'])->name('show');
+        Route::patch('/{id}', [StudentController::class, 'update'])->name('update');
+        Route::delete('/{id}', [StudentController::class, 'destroy'])->name('destroy');
+        Route::patch('/students/{id}/toggle-status', [StudentController::class, 'toggleStatus'])->name('students.toggle');
+    });
 });
 
 require __DIR__ . '/settings.php';
