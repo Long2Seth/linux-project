@@ -28,6 +28,9 @@ Route::get('/about', function () {
 Route::get('/contact', function () {
     return Inertia::render('contact');
 })->name('contact');
+Route::get('/register-student', function () {
+    return Inertia::render('register-student');
+})->name('register-student');
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

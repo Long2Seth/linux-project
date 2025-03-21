@@ -74,6 +74,17 @@ export default function Layout({ children, title }: { children: React.ReactNode;
                                     Contact
                                 </a>
                             </li>
+
+                            <li>
+                                <a
+                                    href="/register-student"
+                                    className={`relative transition-colors duration-300 hover:text-blue-600 ${
+                                        url === '/register-student' ? 'text-blue-600' : 'text-black'
+                                    } animated-underline`}
+                                >
+                                    Register
+                                </a>
+                            </li>
                         </ul>
 
                         <div>
