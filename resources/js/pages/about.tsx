@@ -8,7 +8,7 @@ import { MdRemoveRedEye } from 'react-icons/md';
 export default function About() {
     return (
         <Layout title="សាកលវិទ្យាល័យភូមិន្ទភ្នំពេញ - About">
-            <section className="bg-khotixs-background-white dark:bg-khotixs-background-dark mb-[50px] space-y-[50px] md:mb-[80px] md:space-y-[80px] xl:mb-[100px] xl:space-y-[100px]">
+            <section className="bg-RUPP-background-white dark:bg-RUPP-background-dark mb-[50px] space-y-[50px] md:mb-[80px] md:space-y-[80px] xl:mb-[100px] xl:space-y-[100px]">
                 {/* Hero section */}
                 <section className="relative flex h-[400px] w-full items-center justify-center overflow-x-hidden px-6 xl:h-[600px]">
                     {/* Background Shapes */}
@@ -23,8 +23,8 @@ export default function About() {
                                 ABOUT US
                             </h1>
                             <p className="text-md text-black md:text-lg xl:text-2xl dark:text-white">
-                                We’re here to help! Whether you have a question about your booking, need assistance, or want to share feedback, the
-                                KHOTIXS team is ready to assist you.
+                                We’re here to help! Whether you have a question about your <span className={'font-bold text-black'}>Student Management</span>, need assistance, or want to share feedback, the
+                                RUPP team is ready to assist you.
                             </p>
                         </div>
 
@@ -50,14 +50,13 @@ export default function About() {
                         </div>
                         <div className="flex flex-col items-center justify-center">
                             <h1 className="text-title-color dark:text-secondary-color-text text-lg font-bold uppercase md:text-2xl xl:text-4xl">
-                                KHOTIXS
+                                RUPP
                             </h1>
                             <p className="text-description-color text-md my-[20px] max-w-[350px] px-5 text-center text-base md:mx-[120px] md:max-w-[700px] md:text-lg xl:text-xl dark:text-gray-200">
-                                Welcome to KHOTIXS – Cambodia’s trusted platform for effortless ticket booking and event management. Whether you’re
-                                looking to book tickets for concerts, sports events, or cultural activities, or you’re an event organizer seeking to
-                                reach a broader audience, KHOTIXS is here to bridge the gap. Our platform is designed to make the entire booking
-                                process simple, fast, and reliable. With KHOTIXS, you can explore upcoming events, secure tickets, and connect with
-                                the latest happenings in Cambodia, all in one place.
+                                Welcome to RUPP – Cambodia’s trusted platform for Student Management and event management. Whether you’re
+                                looking to register, check information, scholarships, or you’re an event organizer by University, RUPP is here to bridge the gap. Our platform is designed to make the entire Student Management
+                                process simple, fast, and reliable. With RUPP, you can explore upcoming events, information Volunteer, and connect with
+                                the people in Cambodia, all in one place.
                             </p>
                         </div>
                     </section>
@@ -73,8 +72,8 @@ export default function About() {
                                 </h1>
                                 {/* Description */}
                                 <p className="text-description-color dark:text-secondary-color-text text-center text-base md:text-lg xl:text-xl">
-                                    Our mission is to empower individuals and organizations by providing a seamless, user-friendly ticketing solution
-                                    that connects event organizers with their audiences. We aim to make every event accessible, every booking easy,
+                                    Our mission is to empower individuals and organizations by providing a seamless, user-friendly registering solution
+                                    that connects event organizers with their academic. We aim to make every event accessible, every Student Management easy,
                                     and every experience unforgettable.
                                 </p>
                             </section>
@@ -87,9 +86,9 @@ export default function About() {
                                 </h1>
                                 {/* Description */}
                                 <p className="text-description-color dark:text-secondary-color-text text-center text-base md:text-lg xl:text-xl">
-                                    Our vision is to become the leading online ticketing platform in Cambodia, fostering a thriving events ecosystem
+                                    Our vision is to become the leading  in Cambodia, fostering a thriving events ecosystem
                                     where people can discover, participate in, and celebrate the vibrant culture and creativity of the nation. We
-                                    envision a future where KHOTIXS is the go-to platform for both customers and event organizers across the region.
+                                    envision a future where RUPP is the go-to platform for both student and administration across the region.
                                 </p>
                             </section>
                         </section>

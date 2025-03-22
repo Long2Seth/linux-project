@@ -8,7 +8,7 @@ import { MdRemoveRedEye } from 'react-icons/md';
 export default function RegisterStudent() {
     return (
         <Layout title="សាកលវិទ្យាល័យភូមិន្ទភ្នំពេញ - About">
-            <section className="bg-khotixs-background-white dark:bg-khotixs-background-dark mb-[50px] space-y-[50px] md:mb-[80px] md:space-y-[80px] xl:mb-[100px] xl:space-y-[100px]">
+            <section className="bg-RUPP-background-white dark:bg-RUPP-background-dark mb-[50px] space-y-[50px] md:mb-[80px] md:space-y-[80px] xl:mb-[100px] xl:space-y-[100px]">
                 {/* Hero section */}
                 <section className="relative flex h-[400px] w-full items-center justify-center overflow-x-hidden px-6 xl:h-[600px]">
                     {/* Background Shapes */}
@@ -23,8 +23,8 @@ export default function RegisterStudent() {
                                 ABOUT US
                             </h1>
                             <p className="text-md text-black md:text-lg xl:text-2xl dark:text-white">
-                                We’re here to help! Whether you have a question about your booking, need assistance, or want to share feedback, the
-                                KHOTIXS team is ready to assist you.
+                                We’re here to help! Whether you have a question about your Student Management, need assistance, or want to share feedback, the
+                                RUPP team is ready to assist you.
                             </p>
                         </div>
 

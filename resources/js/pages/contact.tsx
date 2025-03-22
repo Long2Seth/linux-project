@@ -11,7 +11,7 @@ export default function Contact() {
         <Layout title="សាកលវិទ្យាល័យភូមិន្ទភ្នំពេញ - Contact">
 
             <section
-                className="space-y-[50px] md:space-y-[80px] xl:space-y-[100px] mb-[50px] md:mb-[80px] xl:mb-[100px] bg-khotixs-background-white dark:bg-khotixs-background-dark">
+                className="space-y-[50px] md:space-y-[80px] xl:space-y-[100px] mb-[50px] md:mb-[80px] xl:mb-[100px] bg-RUPP-background-white dark:bg-RUPP-background-dark">
                 {/* Hero section */}
                 <section
                     className="relative h-[400px] xl:h-[600px] w-full overflow-x-hidden flex items-center justify-center px-6">
@@ -30,8 +30,8 @@ export default function Contact() {
                                 CONTACT US
                             </h1>
                             <p className="text-black text-md md:text-lg xl:text-2xl dark:text-white">
-                                We’re here to help! Whether you have a question about your booking, need assistance,
-                                or want to share feedback, the KHOTIXS team is ready to assist you.
+                                We’re here to help! Whether you have a question about your Student Management, need assistance,
+                                or want to share feedback, the RUPP team is ready to assist you.
                             </p>
                         </div>
 
