@@ -9,15 +9,16 @@ use Inertia\Inertia;
 
 class StudentRegisterController extends Controller
 {
-    /**
-     * Store a new student registration
-     */
+    public function create()
+    {
+        return Inertia::render('StudentRegister/Create');
+    }
+
     public function store(StudentRegisterRequest $request)
     {
         try {
             $validatedData = $request->validated();
 
-            // Handle profile image upload
             if ($request->hasFile('profile_image')) {
                 $file = $request->file('profile_image');
                 if (!$file->isValid()) {
@@ -27,16 +28,12 @@ class StudentRegisterController extends Controller
                 $validatedData['profile_image'] = $path;
             }
 
-            // Ensure verified is cast to boolean (already handled by $casts in model, but explicit here for clarity)
-            $validatedData['verified'] = (bool) $validatedData['verified'];
+            $validatedData['verified'] = (bool)$validatedData['verified'];
+            StudentRegister::create($validatedData);
 
-            // Create the student registration
-            $student = StudentRegister::create($validatedData);
-
-            // Redirect to the students list with a success message
-            return redirect()->route('students.index')->with('success', 'Student registration successful!');
+            // Redirect back with a success message
+            return redirect()->route('student.create')->with('success', 'Student registration successful!');
         } catch (\Exception $e) {
-            // Log the error and redirect back with an error message
             \Log::error('Failed to register student: ' . $e->getMessage(), [
                 'request_data' => $request->all(),
                 'exception' => $e->getTraceAsString(),
@@ -45,4 +42,97 @@ class StudentRegisterController extends Controller
             return redirect()->back()->withErrors(['message' => 'Failed to register student: ' . $e->getMessage()]);
         }
     }
+
+    public function index(Request $request)
+    {
+        try {
+            $perPage = $request->input('per_page', 10);
+            $search = $request->input('search');
+            $department = $request->input('department');
+            $status = $request->input('status');
+
+            $query = StudentRegister::query();
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
+                });
+            }
+
+            if ($department) {
+                $query->where('department_name', $department);
+            }
+
+            if ($status !== null) {
+                $query->where('verified', $status === 'true' ? 1 : 0);
+            }
+
+            $students = $query->paginate($perPage)->withQueryString();
+
+            return Inertia::render('user', [
+                'students' => $students->map(function ($student) {
+                    return [
+                        'id' => $student->id,
+                        'profile_image' => $student->profile_image,
+                        'slug' => $student->slug,
+                        'first_name' => $student->first_name,
+                        'last_name' => $student->last_name,
+                        'gender' => $student->gender,
+                        'date_of_birth' => $student->date_of_birth,
+                        'nationality' => $student->nationality,
+                        'place_of_birth' => $student->place_of_birth,
+                        'department_name' => $student->department_name,
+                        'phone_number' => $student->phone_number,
+                        'mother_name' => $student->mother_name,
+                        'father_name' => $student->father_name,
+                        'date_of_birth_mother' => $student->date_of_birth_mother,
+                        'date_of_birth_father' => $student->date_of_birth_father,
+                        'family_phone_number' => $student->family_phone_number,
+                        'verified' => $student->verified,
+                    ];
+                })->all(),
+                'meta' => [
+                    'current_page' => $students->currentPage(),
+                    'last_page' => $students->lastPage(),
+                    'per_page' => $students->perPage(),
+                    'total' => $students->total(),
+                ],
+                'filters' => [
+                    'search' => $search,
+                    'department' => $department,
+                    'status' => $status,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to fetch students: ' . $e->getMessage());
+            return Inertia::render('Students', [
+                'errors' => ['message' => 'Unable to fetch students'],
+            ]);
+        }
+    }
+
+
+    public function enableStudent($id)
+    {
+        try {
+            $student = StudentRegister::findOrFail($id);
+
+            if ($student->verified) {
+                return redirect()->back()->with('message', 'Student is already enabled.');
+            }
+
+            $student->update(['verified' => true]);
+
+            return redirect()->back()->with('success', 'Student has been enabled successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Failed to enable student: ' . $e->getMessage(), [
+                'student_id' => $id,
+                'exception' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()->withErrors(['message' => 'Failed to enable student: ' . $e->getMessage()]);
+        }
+    }
+
 }

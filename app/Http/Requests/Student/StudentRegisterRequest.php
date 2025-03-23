@@ -38,7 +38,7 @@ class StudentRegisterRequest extends FormRequest
             'profile_image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'gender' => 'required|string|in:male,female',
+            'gender' => 'required|string|in:Male,Female',
             'date_of_birth' => 'required|date|before:today',
             'nationality' => 'required|string|max:255',
             'place_of_birth' => 'required|string|max:255',

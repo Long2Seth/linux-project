@@ -23,6 +23,11 @@ const mainNavItems: NavItem[] = [
         url: '/students',
         icon: TbUsers,
     },
+    {
+        title: 'Users',
+        url: '/user',
+        icon: TbUsers,
+    },
 ];
 
 // const footerNavItems: NavItem[] = [

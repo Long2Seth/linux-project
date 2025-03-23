@@ -8,10 +8,11 @@ import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { LuUpload } from 'react-icons/lu';
-import { useForm } from "@inertiajs/react";
-import { InputField } from "@/components/InputField";
+import { useForm } from '@inertiajs/react';
+import { InputField } from '@/components/InputField';
 
 export function CreateFormStudent() {
+
     const { data, setData, post, processing, reset } = useForm<StudentRegisterFormData>({
         first_name: '',
         last_name: '',
@@ -29,6 +30,7 @@ export function CreateFormStudent() {
         department_name: 'Information Technology',
         verified: false,
     });
+
 
     const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
     const [dateOfBirthMother, setDateOfBirthMother] = useState<Date | undefined>(undefined);
@@ -60,13 +62,16 @@ export function CreateFormStudent() {
         return (
             data.first_name.trim() !== '' &&
             data.last_name.trim() !== '' &&
-            ['male', 'female'].includes(data.gender) &&
-            dob !== null && dob < today &&
+            ['Male', 'Female'].includes(data.gender) &&
+            dob !== null &&
+            dob < today &&
             data.place_of_birth.trim() !== '' &&
             data.mother_name.trim() !== '' &&
             data.father_name.trim() !== '' &&
-            dobMother !== null && dobMother < today &&
-            dobFather !== null && dobFather < today &&
+            dobMother !== null &&
+            dobMother < today &&
+            dobFather !== null &&
+            dobFather < today &&
             data.family_phone_number.trim() !== '' &&
             phoneRegex.test(data.family_phone_number) &&
             data.profile_image !== null &&
@@ -87,21 +92,11 @@ export function CreateFormStudent() {
 
         setButtonLoading(true);
 
-        const formData = new FormData();
-        Object.entries(data).forEach(([key, value]) => {
-            if (value instanceof File) {
-                formData.append(key, value);
-            } else if (key === 'verified') {
-                formData.append(key, value ? 'true' : 'false');
-            } else if (value !== null && value !== undefined) {
-                formData.append(key, value.toString());
-            }
-        });
-
         post('/register-student', {
-            data: formData,
-            headers: { 'Content-Type': 'multipart/form-data' },
-            onSuccess: () => {
+            forceFormData: true,
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: (page) => {
                 reset();
                 setDateOfBirth(undefined);
                 setDateOfBirthMother(undefined);
@@ -109,14 +104,20 @@ export function CreateFormStudent() {
                 setThumbnail(null);
                 setFormErrors({});
                 setButtonLoading(false);
+                alert(page.props.success || 'Student registration successful!');
             },
             onError: (errors) => {
+                console.log('onError triggered', errors);
                 setFormErrors(errors);
                 setButtonLoading(false);
-                alert('Failed to register student: ' + (errors.message || 'Unknown error'));
+            },
+            onFinish: () => {
+                console.log('onFinish triggered, Processing:', processing);
+                setButtonLoading(false);
             },
         });
     };
+
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -139,7 +140,7 @@ export function CreateFormStudent() {
     const handleSectionClick = () => fileInputRef.current?.click();
 
     return (
-        <section>
+        <section className={` w-full `}>
             <form onSubmit={handleSubmit}>
                 <section className="flex flex-col w-full">
                     <section className="flex w-full gap-5">
@@ -169,8 +170,8 @@ export function CreateFormStudent() {
                                         <SelectValue placeholder="Select Gender" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="male">Male</SelectItem>
-                                        <SelectItem value="female">Female</SelectItem>
+                                        <SelectItem value="Male">Male</SelectItem>
+                                        <SelectItem value="Female">Female</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 {formErrors.gender && <span className="text-sm text-red-500">{formErrors.gender}</span>}
@@ -181,7 +182,13 @@ export function CreateFormStudent() {
                                 </label>
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                        <Button variant="outline" className={cn('w-full justify-start text-left font-normal h-12', !dateOfBirth && 'text-muted-foreground')}>
+                                        <Button
+                                            variant="outline"
+                                            className={cn(
+                                                'w-full justify-start text-left font-normal h-12',
+                                                !dateOfBirth && 'text-muted-foreground'
+                                            )}
+                                        >
                                             <CalendarIcon />
                                             {dateOfBirth ? format(dateOfBirth, 'PPP') : <span>Pick a date</span>}
                                         </Button>
@@ -190,7 +197,9 @@ export function CreateFormStudent() {
                                         <Calendar mode="single" selected={dateOfBirth} onSelect={setDateOfBirth} initialFocus />
                                     </PopoverContent>
                                 </Popover>
-                                {formErrors.date_of_birth && <span className="text-sm text-red-500">{formErrors.date_of_birth}</span>}
+                                {formErrors.date_of_birth && (
+                                    <span className="text-sm text-red-500">{formErrors.date_of_birth}</span>
+                                )}
                             </section>
                             <InputField
                                 id="place_of_birth"
@@ -232,11 +241,17 @@ export function CreateFormStudent() {
                             >
                                 <div className="flex h-full w-full flex-col items-center justify-center">
                                     {thumbnail ? (
-                                        <img src={thumbnail} alt="Uploaded" className="h-full w-full rounded-[6px] object-cover" />
+                                        <img
+                                            src={thumbnail}
+                                            alt="Uploaded"
+                                            className="h-full w-full rounded-[6px] object-cover"
+                                        />
                                     ) : (
                                         <>
                                             <LuUpload className="h-[50px] w-[50px] text-gray-400" />
-                                            <p className="text-gray-400 text-xl font-normal">Drop file here or click to upload</p>
+                                            <p className="text-gray-400 text-xl font-normal">
+                                                Drop file here or click to upload
+                                            </p>
                                         </>
                                     )}
                                 </div>
@@ -248,7 +263,9 @@ export function CreateFormStudent() {
                                     accept="image/jpeg,image/png,image/jpg"
                                 />
                             </section>
-                            {formErrors.profile_image && <span className="text-sm text-red-500">{formErrors.profile_image}</span>}
+                            {formErrors.profile_image && (
+                                <span className="text-sm text-red-500">{formErrors.profile_image}</span>
+                            )}
                         </section>
                     </section>
                     <section className="flex w-full gap-5">
@@ -267,16 +284,29 @@ export function CreateFormStudent() {
                                 </label>
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                        <Button variant="outline" className={cn('w-full justify-start text-left font-normal h-12', !dateOfBirthMother && 'text-muted-foreground')}>
+                                        <Button
+                                            variant="outline"
+                                            className={cn(
+                                                'w-full justify-start text-left font-normal h-12',
+                                                !dateOfBirthMother && 'text-muted-foreground'
+                                            )}
+                                        >
                                             <CalendarIcon />
                                             {dateOfBirthMother ? format(dateOfBirthMother, 'PPP') : <span>Pick a date</span>}
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0">
-                                        <Calendar mode="single" selected={dateOfBirthMother} onSelect={setDateOfBirthMother} initialFocus />
+                                        <Calendar
+                                            mode="single"
+                                            selected={dateOfBirthMother}
+                                            onSelect={setDateOfBirthMother}
+                                            initialFocus
+                                        />
                                     </PopoverContent>
                                 </Popover>
-                                {formErrors.date_of_birth_mother && <span className="text-sm text-red-500">{formErrors.date_of_birth_mother}</span>}
+                                {formErrors.date_of_birth_mother && (
+                                    <span className="text-sm text-red-500">{formErrors.date_of_birth_mother}</span>
+                                )}
                             </section>
                         </section>
                         <section className="w-full text-start space-y-2">
@@ -294,16 +324,29 @@ export function CreateFormStudent() {
                                 </label>
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                        <Button variant="outline" className={cn('w-full justify-start text-left font-normal h-12', !dateOfBirthFather && 'text-muted-foreground')}>
+                                        <Button
+                                            variant="outline"
+                                            className={cn(
+                                                'w-full justify-start text-left font-normal h-12',
+                                                !dateOfBirthFather && 'text-muted-foreground'
+                                            )}
+                                        >
                                             <CalendarIcon />
                                             {dateOfBirthFather ? format(dateOfBirthFather, 'PPP') : <span>Pick a date</span>}
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0">
-                                        <Calendar mode="single" selected={dateOfBirthFather} onSelect={setDateOfBirthFather} initialFocus />
+                                        <Calendar
+                                            mode="single"
+                                            selected={dateOfBirthFather}
+                                            onSelect={setDateOfBirthFather}
+                                            initialFocus
+                                        />
                                     </PopoverContent>
                                 </Popover>
-                                {formErrors.date_of_birth_father && <span className="text-sm text-red-500">{formErrors.date_of_birth_father}</span>}
+                                {formErrors.date_of_birth_father && (
+                                    <span className="text-sm text-red-500">{formErrors.date_of_birth_father}</span>
+                                )}
                             </section>
                         </section>
                     </section>
@@ -316,10 +359,12 @@ export function CreateFormStudent() {
                         Cancel
                     </Button>
                     <Button type="submit" disabled={processing || buttonLoading || !isFormValid()}>
-                        {buttonLoading || processing ? 'Regiter...' : 'Regiter'}
+                        {buttonLoading || processing ? 'Registering...' : 'Register'}
                     </Button>
                 </div>
             </form>
         </section>
     );
 }
+
+export default CreateFormStudent;

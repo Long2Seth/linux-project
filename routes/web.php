@@ -21,12 +21,19 @@ Route::get('/register-student', function () {
 })->name('register-student');
 
 Route::post('/register-student', [StudentRegisterController::class, 'store'])->name('register-student.store');
+Route::get('/student/create', [StudentRegisterController::class, 'create'])->name('student.create');
 
 // routes/web.php
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
     Route::get('/dashboard', [StudentController::class, 'dashboardStats'])
         ->name('dashboard');
+    Route::prefix('user')->name('user.')->group(function () {
+        Route::get('/', [StudentRegisterController::class, 'index'])->name('index');
+        Route::patch('/{id}/disable', [StudentRegisterController::class, 'disableStudent'])->name('disable');
+        Route::patch('/{id}/enable', [StudentRegisterController::class, 'enableStudent'])->name('enable');
+    });
 
     Route::prefix('students')->name('students.')->group(function () {
         Route::get('/', [StudentController::class, 'index'])->name('index');
@@ -41,3 +48,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
+

@@ -61,7 +61,7 @@ export default function About() {
                         </div>
                     </section>
 
-                    <section className="text-secondary-color dark:text-secondary-color-text container mx-auto flex h-auto w-full justify-center">
+                    <section className="text-secondary-color dark:text-secondary-color-text container mt-10 mx-auto flex h-auto w-full justify-center">
                         <section className="grid w-full max-w-[350px] grid-cols-1 justify-center gap-5 px-5 md:max-w-full md:grid-cols-2 md:px-[40px]">
                             <section className="bg-secondary-color-text dark:bg-secondary-color flex w-full max-w-full flex-col justify-center gap-y-5 rounded-[5px] px-10 py-10 text-center md:max-w-[460px] lg:max-w-full">
                                 {/* Icon */}
@@ -99,7 +99,7 @@ export default function About() {
                     <h1 className="text-title-color dark:text-secondary-color-text text-center text-lg font-bold uppercase md:text-2xl xl:text-4xl">
                         OUR MENTORS
                     </h1>
-                    <section className="w-fullz my-[20px] grid grid-cols-1 items-center justify-center gap-5 px-5 sm:grid-cols-2">
+                    <section className="w-fullz my-[20px] flex items-center justify-center gap-5 px-5 sm:grid-cols-2">
                         {MentorData.map((mentor) => (
                             <div className="flex items-center justify-center" key={mentor.name}>
                                 <ProfileCard name={mentor.name} imageUrl={mentor.image} />

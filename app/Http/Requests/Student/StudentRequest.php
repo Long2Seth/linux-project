@@ -20,15 +20,23 @@ class StudentRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:255'],
             'gender' => ['required', 'string', Rule::in(['male', 'female'])],
             'date_of_birth' => ['required', 'date', 'before:today'],
-            'start_date' => ['required', 'date', 'after_or_equal:today'],
             'phone_number' => ['required', 'string', 'max:20', 'regex:/^[+]?[0-9]{8,15}$/'],
             'address' => ['required', 'string', 'max:500'],
             'slug' => ['required', 'string', 'unique:students,slug'],
-            'email' => ['required', 'email', 'unique:students,email'],
-            'password' => ['required', 'string'],
-            'end_date' => ['required', 'date', 'after:start_date'],
             'department_name' => ['required', 'string'],
-            'status' => ['required', 'boolean'],
+            'nationality' => ['required', 'string', 'max:255'],
+            'place_of_birth' => ['required', 'string', 'max:255'],
+            'mother_name' => ['required', 'string', 'max:255'],
+            'father_name' => ['required', 'string', 'max:255'],
+            'date_of_birth_mother' => ['required', 'date', 'before:today'],
+            'date_of_birth_father' => ['required', 'date', 'before:today'],
+            'family_phone_number' => ['required', 'string', 'max:20', 'regex:/^[+]?[0-9]{8,15}$/'],
+            'start_date' => ['required', 'date', 'after_or_equal:today'],
+            'end_date' => ['required', 'date', 'after:start_date'],
+            'email' => ['required', 'email', 'unique:students,email'],
+            'is_status' => ['required', 'boolean'],
+            'is_graduate' => ['required', 'boolean'],
+            'is_deleted' => ['required', 'boolean'],
         ];
     }
 
@@ -37,15 +45,19 @@ class StudentRequest extends FormRequest
         $firstName = $this->input('first_name');
         $lastName = $this->input('last_name');
         $dateOfBirth = $this->input('date_of_birth');
-        $startDate = $this->input('start_date');
+        $currentYear = Carbon::now()->year; // 2025 as of March 23, 2025
+        $startDate = Carbon::now()->addMonth()->startOfMonth(); // 1st day of next month
+        $endDate = $startDate->copy()->addYears(4); // 4 years after start_date
 
         $this->merge([
-            'slug' => strtolower($firstName . "-" . $lastName. "-" . str_replace('-', '', $dateOfBirth)),
-            'end_date' => Carbon::parse($startDate)->addDays(1460)->toDateString(),
+            'slug' => strtolower($firstName . "-" . $lastName . "-" . str_replace('-', '', $dateOfBirth)),
             'department_name' => 'Information Technology',
-            'email' => strtolower($firstName . $lastName . Carbon::now()->year . '@gmail.com'),
-            'password' => 'Student@' . Carbon::now()->year,
-            'status' => true,
+            'email' => strtolower($firstName . "." . $lastName . "." . $currentYear . "@gmail.rupp.kh"),
+            'start_date' => $startDate->toDateString(), // e.g., 2025-04-01 if today is 2025-03-23
+            'end_date' => $endDate->toDateString(), // e.g., 2029-04-01
+            'is_status' => false,
+            'is_graduate' => false,
+            'is_deleted' => false,
         ]);
     }
 
@@ -58,13 +70,30 @@ class StudentRequest extends FormRequest
             'gender.in' => 'Gender must be either male or female.',
             'date_of_birth.required' => 'Date of birth is required.',
             'date_of_birth.before' => 'Date of birth must be in the past.',
-            'start_date.required' => 'Start date is required.',
-            'start_date.after_or_equal' => 'Start date must be today or in the future.',
             'phone_number.required' => 'Phone number is required.',
             'phone_number.regex' => 'Phone number must be a valid number (8-15 digits, optional + prefix).',
             'address.required' => 'Address is required.',
             'slug.unique' => 'The generated slug is already taken.',
+            'department_name.required' => 'Department name is required.',
+            'nationality.required' => 'Nationality is required.',
+            'place_of_birth.required' => 'Place of birth is required.',
+            'mother_name.required' => 'Mother\'s name is required.',
+            'father_name.required' => 'Father\'s name is required.',
+            'date_of_birth_mother.required' => 'Mother\'s date of birth is required.',
+            'date_of_birth_mother.before' => 'Mother\'s date of birth must be in the past.',
+            'date_of_birth_father.required' => 'Father\'s date of birth is required.',
+            'date_of_birth_father.before' => 'Father\'s date of birth must be in the past.',
+            'family_phone_number.required' => 'Family phone number is required.',
+            'family_phone_number.regex' => 'Family phone number must be a valid number (8-15 digits, optional + prefix).',
+            'start_date.required' => 'Start date is required.',
+            'start_date.after_or_equal' => 'Start date must be today or in the future.',
+            'end_date.required' => 'End date is required.',
+            'end_date.after' => 'End date must be after the start date.',
+            'email.required' => 'Email is required.',
             'email.unique' => 'The generated email is already taken.',
+            'is_status.required' => 'Status is required.',
+            'is_graduate.required' => 'Graduate status is required.',
+            'is_deleted.required' => 'Deleted status is required.',
         ];
     }
 }

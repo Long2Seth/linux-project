@@ -1,10 +1,10 @@
 import Layout from '@/layouts/public-layout';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import {CreateFormStudent} from "@/components/create-form-student";
+import { CreateFormStudent } from "@/components/create-form-student";
 
 export default function RegisterStudent() {
     return (
-        <Layout title="សាកលវិទ្យាល័យភូមិន្ទភ្នំពេញ - About">
+        <Layout title="សាកលវិទ្យាល័យភូមិន្ទភ្នំពេញ - Student Registration">
             <section className="bg-khotixs-background-white dark:bg-khotixs-background-dark mb-[50px] space-y-[50px] md:mb-[80px] md:space-y-[80px] xl:mb-[100px] xl:space-y-[100px]">
                 {/* Hero section */}
                 <section className="relative flex h-[400px] w-full items-center justify-center overflow-x-hidden px-6 xl:h-[600px]">
@@ -17,11 +17,10 @@ export default function RegisterStudent() {
                         {/* Left Section for Text */}
                         <div className="z-10 max-w-[100%] space-y-4 px-4 md:max-w-[45%] md:px-8 md:text-left">
                             <h1 className="text-secondary-color-text left-[-230px] text-lg font-bold sm:left-[-180px] md:left-[-130px] md:text-2xl xl:top-[10px] xl:left-[30px] xl:text-4xl">
-                                ABOUT US
+                                REGISTER NOW
                             </h1>
                             <p className="text-md text-black md:text-lg xl:text-2xl dark:text-white">
-                                We’re here to help! Whether you have a question about your booking, need assistance, or want to share feedback, the
-                                KHOTIXS team is ready to assist you.
+                                Join our university community! Register today to start your educational journey with us. Complete the form below to become a student at Royal University of Phnom Penh.
                             </p>
                         </div>
 
@@ -36,11 +35,13 @@ export default function RegisterStudent() {
                         </div>
                     </div>
                 </section>
-                <section>
+                <section className={` w-full `}>
                     <h1 className="text-secondary-color-text text-center uppercase text-lg font-bold sm:left-[-180px] md:left-[-130px] md:text-2xl xl:top-[10px] xl:left-[30px] xl:text-4xl">
-                        You can register here
-                        <CreateFormStudent/>
+                        Student Registration Form
                     </h1>
+                    <div className="flex justify-center mt-6 w-full ">
+                        <CreateFormStudent />
+                    </div>
                 </section>
             </section>
         </Layout>

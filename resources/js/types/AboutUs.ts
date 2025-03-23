@@ -1,3 +1,4 @@
+
 type PersonType = {
     image: string;
     name: string;
@@ -5,12 +6,8 @@ type PersonType = {
 
 export const MentorData: PersonType[] = [
     {
-        image: '/cher-chhaya.png',
-        name: 'CHAN CHHAYA',
-    },
-    {
-        image: '/images/cher-pheng.jpg',
-        name: 'KIM CHANSOKPHENG',
+        image: '/images/teacher-image2.jpg',
+        name: 'khean Ouk',
     },
 ];
 
