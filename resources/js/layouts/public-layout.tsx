@@ -74,12 +74,23 @@ export default function Layout({ children, title }: { children: React.ReactNode;
                                     Contact
                                 </a>
                             </li>
+
+                            <li>
+                                <a
+                                    href="/register-student"
+                                    className={`relative transition-colors duration-300 hover:text-blue-600 ${
+                                        url === '/register-student' ? 'text-blue-600' : 'text-black'
+                                    } animated-underline`}
+                                >
+                                    Register
+                                </a>
+                            </li>
                         </ul>
 
                         <div>
                             {auth.user ? (
                                 <Link
-                                    href={route('dashboard')}
+                                    href="/dashboard"
                                     className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
                                 >
                                     Dashboard
@@ -96,7 +107,7 @@ export default function Layout({ children, title }: { children: React.ReactNode;
                     </section>
                 </nav>
 
-                <main className="container mx-auto mt-1 h-[1600px] px-4 pt-24">{children}</main>
+                <main className="container mx-auto mt-1 min-h-screen px-4 pt-24">{children}</main>
             </div>
 
             {/* Inline CSS for the animation */}

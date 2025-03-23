@@ -2,127 +2,165 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Student\StudentRequest;
+use App\Http\Requests\Student\StudentRegisterRequest;
 use App\Http\Requests\Student\EditStudent;
+use App\Http\Response\Student\StudentResponse;
 use App\Models\Student;
 use Carbon\Carbon;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
 
 class StudentController extends Controller
 {
+
     public function dashboardStats()
     {
         try {
-            $totalStudent = Student::where('is_deleted', false)->count();
-            $maleStudent = Student::where('is_deleted', false)
-                ->where('gender', 'male')
-                ->count();
-            $femaleStudent = Student::where('is_deleted', false)
-                ->where('gender', 'female')
-                ->count();
+            $stats = [
+                'totalStudent' => Student::where('is_deleted', false)->count(),
+                'maleStudent' => Student::where('is_deleted', false)
+                    ->where('gender', 'male')
+                    ->count(),
+                'femaleStudent' => Student::where('is_deleted', false)
+                    ->where('gender', 'female')
+                    ->count(),
+            ];
 
-            // Get chart data
             return Inertia::render('dashboard', [
-                'stats' => [
-                    'totalStudent' => $totalStudent,
-                    'maleStudent' => $maleStudent,
-                    'femaleStudent' => $femaleStudent,
-                ],
+                'stats' => $stats,
             ]);
         } catch (\Exception $e) {
             \Log::error('Failed to fetch dashboard stats: ' . $e->getMessage(), [
                 'exception' => $e->getTraceAsString(),
             ]);
+
+            return Inertia::render('dashboard', [
+                'stats' => [
+                    'totalStudent' => 0,
+                    'maleStudent' => 0,
+                    'femaleStudent' => 0,
+                ],
+                'errors' => ['message' => 'Failed to fetch dashboard stats']
+            ])->withViewData(['status' => 500]);
         }
     }
+
+//    public function store(StudentRegisterRequest $request)
+//    {
+//        try {
+//            $validated = $request->validated();
+//
+//            // Handle file upload for profile_image
+//            if ($request->hasFile('profile_image')) {
+//                $file = $request->file('profile_image');
+//                $path = $file->store('profiles', 'public');
+//                $validated['profile_image'] = $path;
+//            }
+//
+//            $student = Student::create($validated);
+//
+//            return response()->json([
+//                'success' => 'Student created successfully!',
+//                'student_id' => $student->id,
+//            ], 201);
+//        } catch (\Exception $e) {
+//            \Log::error('Failed to create student: ' . $e->getMessage(), [
+//                'request_data' => $request->all(),
+//                'exception' => $e->getTraceAsString(),
+//            ]);
+//
+//            return response()->json([
+//                'error' => 'Failed to create student',
+//            ], 500);
+//        }
+//    }
 
     public function index(Request $request)
     {
         try {
-            $perPage = $request->input('per_page', 20);
-            $page = $request->input('page', 1);
+            $perPage = $request->input('per_page', 20); // Default to 20 items per page
             $search = $request->input('search');
             $department = $request->input('department');
             $status = $request->input('status');
 
-            $query = Student::query();
+            $query = Student::where('is_deleted', false);
 
+            // Apply filters
             if ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%");
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
                 });
             }
-
             if ($department) {
                 $query->where('department_name', $department);
             }
-
             if ($status !== null) {
-                $query->where('status', $status === 'true' ? 1 : 0);
+                $query->where('status', $status); // Assuming status is a field
             }
 
-            $query->where('is_deleted', false);
+            $students = $query->paginate($perPage)->appends($request->query());
 
-            $students = $query->paginate($perPage, ['*'], 'page', $page);
+            $studentResponses = $students->map(function ($student) {
+                return (new StudentResponse($student))->toArray();
+            });
 
             return Inertia::render('students', [
-                'students' => $students->items(),
+                'students' => $studentResponses,
                 'meta' => [
                     'current_page' => $students->currentPage(),
                     'last_page' => $students->lastPage(),
                     'per_page' => $students->perPage(),
                     'total' => $students->total(),
                 ],
+                'filters' => [
+                    'search' => $search,
+                    'department' => $department,
+                    'status' => $status,
+                ],
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to fetch students: ' . $e->getMessage());
-            return Inertia::render('Error', [
-                'message' => 'Unable to fetch students at this time.',
-            ])->withStatus(500);
-        }
-    }
-
-    public function store(StudentRequest $request)
-    {
-        try {
-            $validated = $request->validated();
-            $student = Student::create($validated);
-
-            return redirect()->route('students.index')->with('success', 'Student created successfully!');
-        } catch (\Exception $e) {
-            \Log::error('Failed to create student: ' . $e->getMessage(), [
-                'request_data' => $request->all(),
-                'validated_data' => $request->validated(),
+            \Log::error('Failed to fetch students: ' . $e->getMessage(), [
                 'exception' => $e->getTraceAsString(),
             ]);
 
-            return redirect()->back()->withErrors([
-                'error' => 'Failed to create student: ' . $e->getMessage(),
-            ])->withInput();
+            return Inertia::render('Students', [
+                'students' => [],
+                'meta' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => 20,
+                    'total' => 0,
+                ],
+                'filters' => [],
+                'errors' => ['message' => 'Unable to fetch students'],
+            ])->withViewData(['status' => 500]);
         }
     }
+
 
     public function show($id)
     {
         try {
-            $student = Student::where('is_deleted', false)->findOrFail($id);
-            // Return JSON response for API call instead of Inertia render
+            $student = Student::where('is_deleted', false)
+                ->findOrFail($id);
+
             return response()->json([
-                'student' => $student
+                'student' => (new StudentResponse($student))->toArray()
             ]);
         } catch (\Exception $e) {
             \Log::error('Failed to fetch student: ' . $e->getMessage(), [
                 'student_id' => $id,
                 'exception' => $e->getTraceAsString(),
             ]);
+
             return response()->json([
-                'error' => 'Student not found'
+                'error' => 'Student not found or unable to fetch'
             ], 404);
         }
     }
-
 
     public function update(EditStudent $request, $id)
     {
@@ -130,19 +168,18 @@ class StudentController extends Controller
             $student = Student::where('is_deleted', false)->findOrFail($id);
             $validated = $request->validated();
 
-            // Handle date formatting
-            if (isset($validated['date_of_birth'])) {
-                $validated['date_of_birth'] = Carbon::parse($validated['date_of_birth'])->toDateString();
-            }
-            if (isset($validated['start_date'])) {
-                $validated['start_date'] = Carbon::parse($validated['start_date'])->toDateString();
-            }
-            if (isset($validated['end_date'])) {
-                $validated['end_date'] = Carbon::parse($validated['end_date'])->toDateString();
+            // Handle file upload if profile_image is updated
+            if ($request->hasFile('profile_image')) {
+                $file = $request->file('profile_image');
+                $path = $file->store('profiles', 'public');
+                $validated['profile_image'] = $path;
             }
 
             $student->update($validated);
 
+            return response()->json([
+                'success' => 'Student updated successfully!',
+            ]);
         } catch (\Exception $e) {
             \Log::error('Failed to update student: ' . $e->getMessage(), [
                 'student_id' => $id,
@@ -151,25 +188,8 @@ class StudentController extends Controller
             ]);
 
             return response()->json([
-                'error' => 'Failed to update student: ' . $e->getMessage()
-            ], 400);
-        }
-    }
-    public function toggleStatus(Request $request, $id)
-    {
-        try {
-            $student = Student::where('is_deleted', false)->findOrFail($id);
-            $student->status = !$student->status;
-            $student->save();
-
-            return redirect()->route('students.index')->with('success', 'Student status updated successfully!');
-        } catch (\Exception $e) {
-            \Log::error('Failed to toggle student status: ' . $e->getMessage(), [
-                'student_id' => $id,
-                'exception' => $e->getTraceAsString(),
-            ]);
-
-            return redirect()->back()->withErrors(['error' => 'Failed to toggle student status: ' . $e->getMessage()]);
+                'error' => 'Failed to update student',
+            ], 500);
         }
     }
 
@@ -177,17 +197,20 @@ class StudentController extends Controller
     {
         try {
             $student = Student::where('is_deleted', false)->findOrFail($id);
-            $student->is_deleted = true;
-            $student->save();
+            $student->update(['is_deleted' => true]);
 
-            return redirect()->route('students.index')->with('success', 'Student deleted successfully!');
+            return response()->json([
+                'success' => 'Student deleted successfully!',
+            ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to mark student as deleted: ' . $e->getMessage(), [
+            \Log::error('Failed to delete student: ' . $e->getMessage(), [
                 'student_id' => $id,
                 'exception' => $e->getTraceAsString(),
             ]);
 
-            return redirect()->back()->withErrors(['error' => 'Failed to delete student: ' . $e->getMessage()]);
+            return response()->json([
+                'error' => 'Failed to delete student',
+            ], 500);
         }
     }
 }

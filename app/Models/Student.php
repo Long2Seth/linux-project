@@ -2,58 +2,33 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Model;
 
-class Student extends Authenticatable
+class Student extends Model
 {
-    use HasFactory, Notifiable;
-
-    public $incrementing = false;
-    protected $keyType = 'string';
-    protected $primaryKey = 'id';
-
     protected $fillable = [
-        'id',
         'slug',
+        'profile_image',
         'first_name',
         'last_name',
         'gender',
+        'email',
         'date_of_birth',
-        'address',
         'start_date',
         'end_date',
+        'place_of_birth',
+        'address',
         'department_name',
         'phone_number',
-        'email',
-        'password',
-        'status',
         'is_deleted',
         'is_graduate',
-    ];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
     ];
 
     protected $casts = [
-        'date_of_birth' => 'datetime',
-        'start_date' => 'datetime',
-        'end_date' => 'datetime',
-        'status' => 'boolean',
+        'is_deleted' => 'boolean',
+        'date_of_birth' => 'date',
+        'date_of_birth_mother' => 'date',
+        'date_of_birth_father' => 'date',
     ];
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($model) {
-            if (empty($model->id)) {
-                $model->id = Str::uuid()->toString();
-            }
-        });
-    }
 }

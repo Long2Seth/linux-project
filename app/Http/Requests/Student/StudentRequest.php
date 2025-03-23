@@ -10,7 +10,7 @@ class StudentRequest extends FormRequest
 {
     public function authorize()
     {
-        return true; // Adjust based on your auth logic
+        return true;
     }
 
     public function rules(): array

@@ -18,6 +18,7 @@ class StudentResponse
     {
         return [
             'id' => $this->student->id,
+//            'profile_image'=> $this->student->profile_image,
             'slug' => $this->student->slug,
             'first_name' => $this->student->first_name,
             'last_name' => $this->student->last_name,

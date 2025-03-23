@@ -1,66 +1,79 @@
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogFooter,
-    AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Textarea } from '@/components/ui/textarea';
+import { StudentRegisterFormData } from '@/types/StudentType';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import { useForm } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
-import { StudentFormData } from '@/types/StudentType';
+import { useEffect, useRef, useState } from 'react';
+import { LuUpload } from 'react-icons/lu';
+import { useForm } from "@inertiajs/react";
+import { InputField } from "@/components/InputField";
 
 export function CreateFormStudent() {
-    const { data, setData, post, processing, reset } = useForm<StudentFormData>({
+    const { data, setData, post, processing, reset } = useForm<StudentRegisterFormData>({
         first_name: '',
         last_name: '',
-        gender: '', // Required now
-        date_of_birth: '', // Required now
-        start_date: '',
-        phone_number: '',
-        address: '',
+        gender: '',
+        date_of_birth: '',
+        place_of_birth: '',
+        phone_number: null,
+        mother_name: '',
+        father_name: '',
+        date_of_birth_mother: '',
+        date_of_birth_father: '',
+        family_phone_number: '',
+        profile_image: null,
+        nationality: 'khmer',
+        department_name: 'Information Technology',
+        verified: false,
     });
 
     const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
-    const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+    const [dateOfBirthMother, setDateOfBirthMother] = useState<Date | undefined>(undefined);
+    const [dateOfBirthFather, setDateOfBirthFather] = useState<Date | undefined>(undefined);
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [buttonLoading, setButtonLoading] = useState(false);
+    const [thumbnail, setThumbnail] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (dateOfBirth) {
-            setData('date_of_birth', format(dateOfBirth, 'yyyy-MM-dd'));
-        }
+        if (dateOfBirth) setData('date_of_birth', format(dateOfBirth, 'yyyy-MM-dd'));
     }, [dateOfBirth]);
 
     useEffect(() => {
-        if (startDate) {
-            setData('start_date', format(startDate, 'yyyy-MM-dd'));
-        }
-    }, [startDate]);
+        if (dateOfBirthMother) setData('date_of_birth_mother', format(dateOfBirthMother, 'yyyy-MM-dd'));
+    }, [dateOfBirthMother]);
+
+    useEffect(() => {
+        if (dateOfBirthFather) setData('date_of_birth_father', format(dateOfBirthFather, 'yyyy-MM-dd'));
+    }, [dateOfBirthFather]);
 
     const isFormValid = () => {
-        const phoneRegex = /^[+]?[0-9]{8,15}$/;
+        const phoneRegex = /^[0-9]{8,20}$/;
         const today = new Date();
         const dob = dateOfBirth ? new Date(dateOfBirth) : null;
-        const start = startDate ? new Date(startDate) : null;
+        const dobMother = dateOfBirthMother ? new Date(dateOfBirthMother) : null;
+        const dobFather = dateOfBirthFather ? new Date(dateOfBirthFather) : null;
 
         return (
             data.first_name.trim() !== '' &&
             data.last_name.trim() !== '' &&
-            ['male', 'female'].includes(data.gender) && // Gender is required
-            dob !== null && dob < today && // Date of birth is required and must be in the past
-            start !== null && start >= today &&
-            data.phone_number.trim() !== '' && phoneRegex.test(data.phone_number) &&
-            data.address.trim() !== ''
+            ['male', 'female'].includes(data.gender) &&
+            dob !== null && dob < today &&
+            data.place_of_birth.trim() !== '' &&
+            data.mother_name.trim() !== '' &&
+            data.father_name.trim() !== '' &&
+            dobMother !== null && dobMother < today &&
+            dobFather !== null && dobFather < today &&
+            data.family_phone_number.trim() !== '' &&
+            phoneRegex.test(data.family_phone_number) &&
+            data.profile_image !== null &&
+            data.profile_image.size <= 2048 * 1024 &&
+            ['image/jpeg', 'image/png', 'image/jpg'].includes(data.profile_image.type) &&
+            data.nationality.trim() !== '' &&
+            data.department_name.trim() !== ''
         );
     };
 
@@ -72,170 +85,241 @@ export function CreateFormStudent() {
             return;
         }
 
-        console.log('Submitting data:', data);
+        setButtonLoading(true);
 
-        post('/students', {
+        const formData = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+            if (value instanceof File) {
+                formData.append(key, value);
+            } else if (key === 'verified') {
+                formData.append(key, value ? 'true' : 'false');
+            } else if (value !== null && value !== undefined) {
+                formData.append(key, value.toString());
+            }
+        });
+
+        post('/register-student', {
+            data: formData,
+            headers: { 'Content-Type': 'multipart/form-data' },
             onSuccess: () => {
-                console.log('Student created successfully');
                 reset();
                 setDateOfBirth(undefined);
-                setStartDate(undefined);
+                setDateOfBirthMother(undefined);
+                setDateOfBirthFather(undefined);
+                setThumbnail(null);
                 setFormErrors({});
+                setButtonLoading(false);
             },
             onError: (errors) => {
-                console.error('Form submission errors:', errors);
                 setFormErrors(errors);
+                setButtonLoading(false);
+                alert('Failed to register student: ' + (errors.message || 'Unknown error'));
             },
         });
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 2048 * 1024) {
+                setFormErrors({ ...formErrors, profile_image: 'The profile image must not exceed 2MB.' });
+                return;
+            }
+            if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+                setFormErrors({ ...formErrors, profile_image: 'The profile image must be a JPEG, PNG, or JPG file.' });
+                return;
+            }
+            setData('profile_image', file);
+            const imageUrl = URL.createObjectURL(file);
+            setThumbnail(imageUrl);
+            setFormErrors({ ...formErrors, profile_image: '' });
+        }
+    };
+
+    const handleSectionClick = () => fileInputRef.current?.click();
+
     return (
-        <AlertDialog>
-            <AlertDialogTrigger asChild>
-                <Button className="cursor-pointer bg-gradient-to-r from-[#FF3CAC] via-[#784BA0] to-[#2B86C5] uppercase">
-                    Create Student
-                </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-                <form onSubmit={handleSubmit}>
-                    <section className="space-y-2">
-                        <Label htmlFor="first_name" className="text-primary-color-text dark:text-secondary-color-text text-base font-medium">
-                            First Name <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                            id="first_name"
-                            name="first_name"
-                            value={data.first_name}
-                            onChange={(e) => setData('first_name', e.target.value)}
-                            placeholder="Enter First Name"
-                            className="border-light-border-color dark:text-secondary-color-text dark:bg-khotixs-background-dark rounded-[6px] p-2 text-lg placeholder:text-gray-300 dark:border dark:border-white"
-                        />
-                        {formErrors.first_name && <span className="text-red-500 text-sm">{formErrors.first_name}</span>}
-                    </section>
-
-                    <section className="space-y-2">
-                        <Label htmlFor="last_name" className="text-primary-color-text dark:text-secondary-color-text text-base font-medium">
-                            Last Name <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                            id="last_name"
-                            name="last_name"
-                            value={data.last_name}
-                            onChange={(e) => setData('last_name', e.target.value)}
-                            placeholder="Enter Last Name"
-                            className="border-light-border-color dark:text-secondary-color-text dark:bg-khotixs-background-dark rounded-[6px] p-2 text-lg placeholder:text-gray-300 dark:border dark:border-white"
-                        />
-                        {formErrors.last_name && <span className="text-red-500 text-sm">{formErrors.last_name}</span>}
-                    </section>
-
-                    <section className="space-y-2">
-                        <Label htmlFor="gender" className="text-primary-color-text dark:text-secondary-color-text text-base font-medium">
-                            Gender <span className="text-red-500">*</span>
-                        </Label>
-                        <Select onValueChange={(value) => setData('gender', value)} value={data.gender}>
-                            <SelectTrigger className="border-light-border-color rounded-[6px] border">
-                                <SelectValue placeholder="Select Gender" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-khotixs-background-white rounded-[6px]">
-                                <SelectItem value="male">Male</SelectItem>
-                                <SelectItem value="female">Female</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        {formErrors.gender && <span className="text-red-500 text-sm">{formErrors.gender}</span>}
-                    </section>
-
-                    <section className="space-y-2">
-                        <Label className="text-primary-color-text dark:text-secondary-color-text text-base font-medium">
-                            Date of Birth <span className="text-red-500">*</span>
-                        </Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant={'outline'}
-                                    className={cn('w-full justify-start text-left font-normal', !dateOfBirth && 'text-muted-foreground')}
-                                >
-                                    <CalendarIcon />
-                                    {dateOfBirth ? format(dateOfBirth, 'PPP') : <span>Pick a date of birth</span>}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                    mode="single"
-                                    selected={dateOfBirth}
-                                    onSelect={(date) => setDateOfBirth(date)}
-                                    initialFocus
+        <section>
+            <form onSubmit={handleSubmit}>
+                <section className="flex flex-col w-full">
+                    <section className="flex w-full gap-5">
+                        <section className="w-full text-start space-y-2">
+                            <InputField
+                                id="first_name"
+                                label="First Name"
+                                value={data.first_name}
+                                onChange={(e) => setData('first_name', e.target.value)}
+                                placeholder="Enter First Name"
+                                error={formErrors.first_name}
+                            />
+                            <InputField
+                                id="last_name"
+                                label="Last Name"
+                                value={data.last_name}
+                                onChange={(e) => setData('last_name', e.target.value)}
+                                placeholder="Enter Last Name"
+                                error={formErrors.last_name}
+                            />
+                            <section className="space-y-2">
+                                <label htmlFor="gender" className="block text-lg font-normal">
+                                    Gender <span className="text-red-500">*</span>
+                                </label>
+                                <Select onValueChange={(value) => setData('gender', value)} value={data.gender}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Gender" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="male">Male</SelectItem>
+                                        <SelectItem value="female">Female</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {formErrors.gender && <span className="text-sm text-red-500">{formErrors.gender}</span>}
+                            </section>
+                            <section className="space-y-2">
+                                <label className="block text-lg font-normal">
+                                    Date of Birth <span className="text-red-500">*</span>
+                                </label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className={cn('w-full justify-start text-left font-normal h-12', !dateOfBirth && 'text-muted-foreground')}>
+                                            <CalendarIcon />
+                                            {dateOfBirth ? format(dateOfBirth, 'PPP') : <span>Pick a date</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar mode="single" selected={dateOfBirth} onSelect={setDateOfBirth} initialFocus />
+                                    </PopoverContent>
+                                </Popover>
+                                {formErrors.date_of_birth && <span className="text-sm text-red-500">{formErrors.date_of_birth}</span>}
+                            </section>
+                            <InputField
+                                id="place_of_birth"
+                                label="Place of Birth"
+                                value={data.place_of_birth}
+                                onChange={(e) => setData('place_of_birth', e.target.value)}
+                                placeholder="Enter Place of Birth"
+                                error={formErrors.place_of_birth}
+                            />
+                            <InputField
+                                id="nationality"
+                                label="Nationality"
+                                value={data.nationality}
+                                onChange={(e) => setData('nationality', e.target.value)}
+                                placeholder="Enter Nationality"
+                                error={formErrors.nationality}
+                            />
+                            <InputField
+                                id="phone_number"
+                                label="Phone Number"
+                                value={data.phone_number || ''}
+                                onChange={(e) => setData('phone_number', e.target.value || null)}
+                                placeholder="Enter Phone Number"
+                                error={formErrors.phone_number}
+                            />
+                            <InputField
+                                id="family_phone_number"
+                                label="Parents Phone Number"
+                                value={data.family_phone_number}
+                                onChange={(e) => setData('family_phone_number', e.target.value)}
+                                placeholder="Enter Family Phone Number"
+                                error={formErrors.family_phone_number}
+                            />
+                        </section>
+                        <section className="w-full pt-10">
+                            <section
+                                className="h-full w-full rounded-[6px] border border-dashed border-gray-400 cursor-pointer"
+                                onClick={handleSectionClick}
+                            >
+                                <div className="flex h-full w-full flex-col items-center justify-center">
+                                    {thumbnail ? (
+                                        <img src={thumbnail} alt="Uploaded" className="h-full w-full rounded-[6px] object-cover" />
+                                    ) : (
+                                        <>
+                                            <LuUpload className="h-[50px] w-[50px] text-gray-400" />
+                                            <p className="text-gray-400 text-xl font-normal">Drop file here or click to upload</p>
+                                        </>
+                                    )}
+                                </div>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    style={{ display: 'none' }}
+                                    onChange={handleFileChange}
+                                    accept="image/jpeg,image/png,image/jpg"
                                 />
-                            </PopoverContent>
-                        </Popover>
-                        {formErrors.date_of_birth && <span className="text-red-500 text-sm">{formErrors.date_of_birth}</span>}
+                            </section>
+                            {formErrors.profile_image && <span className="text-sm text-red-500">{formErrors.profile_image}</span>}
+                        </section>
                     </section>
-
-                    <section className="space-y-2">
-                        <Label className="text-primary-color-text dark:text-secondary-color-text text-base font-medium">
-                            Start Date <span className="text-red-500">*</span>
-                        </Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant={'outline'}
-                                    className={cn('w-full justify-start text-left font-normal', !startDate && 'text-muted-foreground')}
-                                >
-                                    <CalendarIcon />
-                                    {startDate ? format(startDate, 'PPP') : <span>Pick a start date</span>}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                    mode="single"
-                                    selected={startDate}
-                                    onSelect={(date) => setStartDate(date)}
-                                    initialFocus
-                                />
-                            </PopoverContent>
-                        </Popover>
-                        {formErrors.start_date && <span className="text-red-500 text-sm">{formErrors.start_date}</span>}
+                    <section className="flex w-full gap-5">
+                        <section className="w-full text-start space-y-2">
+                            <InputField
+                                id="mother_name"
+                                label="Mother's Name"
+                                value={data.mother_name}
+                                onChange={(e) => setData('mother_name', e.target.value)}
+                                placeholder="Enter Mother's Name"
+                                error={formErrors.mother_name}
+                            />
+                            <section className="space-y-2">
+                                <label className="block text-lg font-normal">
+                                    Mother's Date of Birth <span className="text-red-500">*</span>
+                                </label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className={cn('w-full justify-start text-left font-normal h-12', !dateOfBirthMother && 'text-muted-foreground')}>
+                                            <CalendarIcon />
+                                            {dateOfBirthMother ? format(dateOfBirthMother, 'PPP') : <span>Pick a date</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar mode="single" selected={dateOfBirthMother} onSelect={setDateOfBirthMother} initialFocus />
+                                    </PopoverContent>
+                                </Popover>
+                                {formErrors.date_of_birth_mother && <span className="text-sm text-red-500">{formErrors.date_of_birth_mother}</span>}
+                            </section>
+                        </section>
+                        <section className="w-full text-start space-y-2">
+                            <InputField
+                                id="father_name"
+                                label="Father's Name"
+                                value={data.father_name}
+                                onChange={(e) => setData('father_name', e.target.value)}
+                                placeholder="Enter Father's Name"
+                                error={formErrors.father_name}
+                            />
+                            <section className="space-y-2">
+                                <label className="block text-lg font-normal">
+                                    Father's Date of Birth <span className="text-red-500">*</span>
+                                </label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className={cn('w-full justify-start text-left font-normal h-12', !dateOfBirthFather && 'text-muted-foreground')}>
+                                            <CalendarIcon />
+                                            {dateOfBirthFather ? format(dateOfBirthFather, 'PPP') : <span>Pick a date</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar mode="single" selected={dateOfBirthFather} onSelect={setDateOfBirthFather} initialFocus />
+                                    </PopoverContent>
+                                </Popover>
+                                {formErrors.date_of_birth_father && <span className="text-sm text-red-500">{formErrors.date_of_birth_father}</span>}
+                            </section>
+                        </section>
                     </section>
+                </section>
 
-                    <section className="space-y-2">
-                        <Label htmlFor="phone_number" className="text-primary-color-text dark:text-secondary-color-text text-base font-medium">
-                            Phone Number <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                            id="phone_number"
-                            name="phone_number"
-                            value={data.phone_number}
-                            onChange={(e) => setData('phone_number', e.target.value)}
-                            placeholder="Enter Phone Number"
-                            className="border-light-border-color dark:text-secondary-color-text dark:bg-khotixs-background-dark rounded-[6px] p-2 text-lg placeholder:text-gray-300 dark:border dark:border-white"
-                        />
-                        {formErrors.phone_number && <span className="text-red-500 text-sm">{formErrors.phone_number}</span>}
-                    </section>
+                {formErrors.message && <span className="mt-2 block text-sm text-red-500">{formErrors.message}</span>}
 
-                    <section className="space-y-2">
-                        <Label htmlFor="address" className="text-primary-color-text dark:text-secondary-color-text text-base font-medium">
-                            Address <span className="text-red-500">*</span>
-                        </Label>
-                        <Textarea
-                            id="address"
-                            name="address"
-                            value={data.address}
-                            onChange={(e) => setData('address', e.target.value)}
-                            placeholder="Enter Address"
-                            className="border-light-border-color dark:text-secondary-color-text dark:bg-khotixs-background-dark w-full rounded-[6px] p-2 text-lg placeholder:text-gray-300 dark:border dark:border-white"
-                        />
-                        {formErrors.address && <span className="text-red-500 text-sm">{formErrors.address}</span>}
-                    </section>
-
-                    {formErrors.error && <span className="text-red-500 text-sm block mt-2">{formErrors.error}</span>}
-
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction type="submit" disabled={processing || !isFormValid()}>
-                            Create
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </form>
-            </AlertDialogContent>
-        </AlertDialog>
+                <div className="mt-4 flex w-full justify-end space-x-4">
+                    <Button type="button" variant="outline" onClick={() => reset()}>
+                        Cancel
+                    </Button>
+                    <Button type="submit" disabled={processing || buttonLoading || !isFormValid()}>
+                        {buttonLoading || processing ? 'Regiter...' : 'Regiter'}
+                    </Button>
+                </div>
+            </form>
+        </section>
     );
 }

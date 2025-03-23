@@ -7,16 +7,16 @@ import { EditFormStudent } from '@/components/edit-form-student';
 import { LiaEdit } from 'react-icons/lia';
 
 type ActionStudentProps = {
-    id: string;
+    id: string | number;
     isStatus: boolean;
-    onStatusChange?: (id: string, newStatus: boolean) => void;
-    onDelete?: (id: string) => void;
+    onStatusChange?: (id: string | number, newStatus: boolean) => void;
+    onDelete?: (id: string | number) => void;
 };
 
 export function ActionStudent({ id, isStatus, onStatusChange, onDelete }: ActionStudentProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [currentStatus, setCurrentStatus] = useState(isStatus);
-    const [isEditFormOpen, setIsEditFormOpen] = useState(false); // State to control EditFormStudent visibility
+    const [isEditFormOpen, setIsEditFormOpen] = useState(false);
 
     const handlePublishToggle = () => {
         setIsLoading(true);
@@ -108,7 +108,7 @@ export function ActionStudent({ id, isStatus, onStatusChange, onDelete }: Action
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-            <EditFormStudent id={id} isOpen={isEditFormOpen} onClose={() => setIsEditFormOpen(false)} />
+            <EditFormStudent id={id.toString()} isOpen={isEditFormOpen} onClose={() => setIsEditFormOpen(false)} />  {/* Convert id to string */}
         </>
     );
 }
