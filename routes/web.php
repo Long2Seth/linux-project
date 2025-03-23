@@ -29,10 +29,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/dashboard', [StudentController::class, 'dashboardStats'])
         ->name('dashboard');
+
     Route::prefix('user')->name('user.')->group(function () {
         Route::get('/', [StudentRegisterController::class, 'index'])->name('index');
         Route::patch('/{id}/disable', [StudentRegisterController::class, 'disableStudent'])->name('disable');
         Route::patch('/{id}/enable', [StudentRegisterController::class, 'enableStudent'])->name('enable');
+        Route::get('/{id}', [StudentRegisterController::class, 'show'])->name('show');
     });
 
     Route::prefix('students')->name('students.')->group(function () {
@@ -41,10 +43,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{id}', [StudentController::class, 'show'])->name('show');
         Route::patch('/{id}', [StudentController::class, 'update'])->name('update');
         Route::delete('/{id}', [StudentController::class, 'destroy'])->name('destroy');
-        Route::patch('/{id}/toggle-status', [StudentController::class, 'toggleStatus'])
-            ->name('toggle');
+        Route::patch('/{id}/toggle-status', [StudentController::class, 'toggleStatus'])->name('toggle');
     });
 });
+
+
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

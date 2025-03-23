@@ -14,14 +14,20 @@ class Student extends Model
         'gender',
         'email',
         'date_of_birth',
+        'nationality',
         'start_date',
         'end_date',
         'place_of_birth',
         'address',
+        'mother_name',
+        'father_name',
+        'date_of_birth_mother',
+        'date_of_birth_father',
         'department_name',
         'phone_number',
         'is_deleted',
         'is_graduate',
+        'is_status',
 
     ];
 
