@@ -13,11 +13,11 @@ export const columnStudent: ColumnDef<StudentType>[] = [
         header: ({ column }) => <DataTableColumnHeader className="min-w-[270px]" column={column} title="SLUG" />,
         cell: ({ row }) => <div>{row.original.slug}</div>,
     },
-    // {
-    //     accessorKey: 'profile_image',
-    //     header: ({ column }) => <DataTableColumnHeader className="min-w-[150px]" column={column} title="PROFILE IMAGE" />,
-    //     cell: ({ row }) => <div>{row.original.profile_image || 'N/A'}</div>,
-    // },
+    {
+        accessorKey: 'profile_image',
+        header: ({ column }) => <DataTableColumnHeader className="min-w-[150px]" column={column} title="PROFILE IMAGE" />,
+        cell: ({ row }) => <div>{row.original.profile_image || 'N/A'}</div>,
+    },
     {
         accessorKey: 'first_name',
         header: ({ column }) => <DataTableColumnHeader className="min-w-[150px]" column={column} title="FIRST NAME" />,
@@ -121,15 +121,15 @@ export const columnStudent: ColumnDef<StudentType>[] = [
             </Badge>
         ),
     },
-    // {
-    //     accessorKey: 'is_deleted',
-    //     header: ({ column }) => <DataTableColumnHeader className="min-w-[100px]" column={column} title="DELETED" />,
-    //     cell: ({ row }) => (
-    //         <Badge className={`rounded-[6px] ${row.original.is_deleted ? 'bg-red-400 text-white' : 'bg-green-500 text-white'}`}>
-    //             {row.original.is_deleted ? 'Deleted' : 'Active'}
-    //         </Badge>
-    //     ),
-    // },
+    {
+        accessorKey: 'is_deleted',
+        header: ({ column }) => <DataTableColumnHeader className="min-w-[100px]" column={column} title="DELETED" />,
+        cell: ({ row }) => (
+            <Badge className={`rounded-[6px] ${row.original.is_deleted ? 'bg-red-400 text-white' : 'bg-green-500 text-white'}`}>
+                {row.original.is_deleted ? 'Deleted' : 'Active'}
+            </Badge>
+        ),
+    },
     {
         accessorKey: 'created_at',
         header: ({ column }) => <DataTableColumnHeader className="min-w-[120px]" column={column} title="CREATED AT" />,
