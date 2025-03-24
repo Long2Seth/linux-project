@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 export const columnStudent: ColumnDef<StudentType>[] = [
     {
         accessorKey: 'slug',
-        header: ({ column }) => <DataTableColumnHeader className="min-w-[170px]" column={column} title="SLUG" />,
+        header: ({ column }) => <DataTableColumnHeader className="min-w-[270px]" column={column} title="SLUG" />,
         cell: ({ row }) => <div>{row.original.slug}</div>,
     },
     // {
