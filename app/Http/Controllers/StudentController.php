@@ -18,10 +18,10 @@ class StudentController extends Controller
             $stats = [
                 'totalStudent' => Student::where('is_deleted', false)->count(),
                 'maleStudent' => Student::where('is_deleted', false)
-                    ->where('gender', 'Male')
+                    ->whereRaw('LOWER(gender) = ?', ['male'])
                     ->count(),
                 'femaleStudent' => Student::where('is_deleted', false)
-                    ->where('gender', 'Female')
+                    ->whereRaw('LOWER(gender) = ?', ['female'])
                     ->count(),
             ];
 
@@ -171,9 +171,6 @@ class StudentController extends Controller
 
             $student->update($validated);
 
-            return response()->json([
-                'success' => 'Student updated successfully!',
-            ]);
         } catch (\Exception $e) {
             \Log::error('Failed to update student: ' . $e->getMessage(), [
                 'student_id' => $id,
@@ -193,9 +190,6 @@ class StudentController extends Controller
             $student = Student::where('is_deleted', false)->findOrFail($id);
             $student->update(['is_deleted' => true]);
 
-            return response()->json([
-                'success' => 'Student deleted successfully!',
-            ]);
         } catch (\Exception $e) {
             \Log::error('Failed to delete student: ' . $e->getMessage(), [
                 'student_id' => $id,
