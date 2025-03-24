@@ -1,19 +1,18 @@
+import { InputField } from '@/components/InputField';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { StudentRegisterFormData } from '@/types/StudentType';
+import { useForm } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { LuUpload } from 'react-icons/lu';
-import { useForm } from '@inertiajs/react';
-import { InputField } from '@/components/InputField';
 
 export function CreateFormStudent() {
-
-    const { data, setData, post, processing, reset } = useForm<StudentRegisterFormData>({
+    const { data, setData, post, processing, reset, errors } = useForm<StudentRegisterFormData>({
         first_name: '',
         last_name: '',
         gender: '',
@@ -26,17 +25,14 @@ export function CreateFormStudent() {
         date_of_birth_father: '',
         family_phone_number: '',
         profile_image: null,
-        nationality: 'khmer',
+        nationality: 'Khmer',
         department_name: 'Information Technology',
         verified: false,
     });
 
-
     const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
     const [dateOfBirthMother, setDateOfBirthMother] = useState<Date | undefined>(undefined);
     const [dateOfBirthFather, setDateOfBirthFather] = useState<Date | undefined>(undefined);
-    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-    const [buttonLoading, setButtonLoading] = useState(false);
     const [thumbnail, setThumbnail] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,105 +49,102 @@ export function CreateFormStudent() {
     }, [dateOfBirthFather]);
 
     const isFormValid = () => {
-        const phoneRegex = /^[0-9]{8,20}$/;
+        const phoneRegex = /^[+]?[0-9]{8,15}$/;
         const today = new Date();
         const dob = dateOfBirth ? new Date(dateOfBirth) : null;
         const dobMother = dateOfBirthMother ? new Date(dateOfBirthMother) : null;
         const dobFather = dateOfBirthFather ? new Date(dateOfBirthFather) : null;
 
         return (
-            data.first_name.trim() !== '' &&
-            data.last_name.trim() !== '' &&
+            data.first_name.trim().length > 0 &&
+            data.first_name.length <= 255 &&
+            data.last_name.trim().length > 0 &&
+            data.last_name.length <= 255 &&
             ['Male', 'Female'].includes(data.gender) &&
             dob !== null &&
             dob < today &&
-            data.place_of_birth.trim() !== '' &&
-            data.mother_name.trim() !== '' &&
-            data.father_name.trim() !== '' &&
+            data.place_of_birth.trim().length > 0 &&
+            data.place_of_birth.length <= 255 &&
+            data.nationality.trim().length > 0 &&
+            data.nationality.length <= 255 &&
+            data.mother_name.trim().length > 0 &&
+            data.mother_name.length <= 255 &&
+            data.father_name.trim().length > 0 &&
+            data.father_name.length <= 255 &&
             dobMother !== null &&
             dobMother < today &&
             dobFather !== null &&
             dobFather < today &&
-            data.family_phone_number.trim() !== '' &&
+            data.family_phone_number.trim().length > 0 &&
+            data.family_phone_number.length <= 20 &&
             phoneRegex.test(data.family_phone_number) &&
-            data.profile_image !== null &&
-            data.profile_image.size <= 2048 * 1024 &&
-            ['image/jpeg', 'image/png', 'image/jpg'].includes(data.profile_image.type) &&
-            data.nationality.trim() !== '' &&
-            data.department_name.trim() !== ''
+            (!data.phone_number || (data.phone_number.length <= 20 && phoneRegex.test(data.phone_number))) &&
+            data.department_name.trim().length > 0 &&
+            data.department_name.length <= 255 &&
+            (data.profile_image === null ||
+                (data.profile_image.size <= 2048 * 1024 && ['image/jpeg', 'image/png', 'image/jpg'].includes(data.profile_image.type)))
         );
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+
         if (!isFormValid()) {
             alert('Please fill in all required fields correctly.');
             return;
         }
 
-        setButtonLoading(true);
-
         post('/register-student', {
             forceFormData: true,
             preserveState: true,
             preserveScroll: true,
-            onSuccess: (page) => {
+            onSuccess: () => {
                 reset();
                 setDateOfBirth(undefined);
                 setDateOfBirthMother(undefined);
                 setDateOfBirthFather(undefined);
                 setThumbnail(null);
-                setFormErrors({});
-                setButtonLoading(false);
-                alert(page.props.success || 'Student registration successful!');
             },
-            onError: (errors) => {
-                console.log('onError triggered', errors);
-                setFormErrors(errors);
-                setButtonLoading(false);
+            onError: (formErrors) => {
+                console.error('Registration errors:', formErrors);
             },
-            onFinish: () => {
-                console.log('onFinish triggered, Processing:', processing);
-                setButtonLoading(false);
-            },
+            onFinish: () => {},
         });
     };
-
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             if (file.size > 2048 * 1024) {
-                setFormErrors({ ...formErrors, profile_image: 'The profile image must not exceed 2MB.' });
+                alert('The profile image must not exceed 2MB.');
                 return;
             }
             if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-                setFormErrors({ ...formErrors, profile_image: 'The profile image must be a JPEG, PNG, or JPG file.' });
+                alert('The profile image must be a JPEG, PNG, or JPG file.');
                 return;
             }
             setData('profile_image', file);
             const imageUrl = URL.createObjectURL(file);
             setThumbnail(imageUrl);
-            setFormErrors({ ...formErrors, profile_image: '' });
         }
     };
 
     const handleSectionClick = () => fileInputRef.current?.click();
 
     return (
-        <section className={` w-full `}>
+        <section className="w-full">
             <form onSubmit={handleSubmit}>
-                <section className="flex flex-col w-full">
+                <section className="flex w-full flex-col">
                     <section className="flex w-full gap-5">
-                        <section className="w-full text-start space-y-2">
+                        <section className="w-full space-y-2 text-start">
                             <InputField
                                 id="first_name"
                                 label="First Name"
                                 value={data.first_name}
                                 onChange={(e) => setData('first_name', e.target.value)}
                                 placeholder="Enter First Name"
-                                error={formErrors.first_name}
+                                error={errors.first_name}
                             />
                             <InputField
                                 id="last_name"
@@ -159,7 +152,7 @@ export function CreateFormStudent() {
                                 value={data.last_name}
                                 onChange={(e) => setData('last_name', e.target.value)}
                                 placeholder="Enter Last Name"
-                                error={formErrors.last_name}
+                                error={errors.last_name}
                             />
                             <section className="space-y-2">
                                 <label htmlFor="gender" className="block text-lg font-normal">
@@ -174,7 +167,7 @@ export function CreateFormStudent() {
                                         <SelectItem value="Female">Female</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                {formErrors.gender && <span className="text-sm text-red-500">{formErrors.gender}</span>}
+                                {errors.gender && <span className="text-sm text-red-500">{errors.gender}</span>}
                             </section>
                             <section className="space-y-2">
                                 <label className="block text-lg font-normal">
@@ -184,10 +177,7 @@ export function CreateFormStudent() {
                                     <PopoverTrigger asChild>
                                         <Button
                                             variant="outline"
-                                            className={cn(
-                                                'w-full justify-start text-left font-normal h-12',
-                                                !dateOfBirth && 'text-muted-foreground'
-                                            )}
+                                            className={cn('h-12 w-full justify-start text-left font-normal', !dateOfBirth && 'text-muted-foreground')}
                                         >
                                             <CalendarIcon />
                                             {dateOfBirth ? format(dateOfBirth, 'PPP') : <span>Pick a date</span>}
@@ -197,9 +187,7 @@ export function CreateFormStudent() {
                                         <Calendar mode="single" selected={dateOfBirth} onSelect={setDateOfBirth} initialFocus />
                                     </PopoverContent>
                                 </Popover>
-                                {formErrors.date_of_birth && (
-                                    <span className="text-sm text-red-500">{formErrors.date_of_birth}</span>
-                                )}
+                                {errors.date_of_birth && <span className="text-sm text-red-500">{errors.date_of_birth}</span>}
                             </section>
                             <InputField
                                 id="place_of_birth"
@@ -207,7 +195,7 @@ export function CreateFormStudent() {
                                 value={data.place_of_birth}
                                 onChange={(e) => setData('place_of_birth', e.target.value)}
                                 placeholder="Enter Place of Birth"
-                                error={formErrors.place_of_birth}
+                                error={errors.place_of_birth}
                             />
                             <InputField
                                 id="nationality"
@@ -215,7 +203,7 @@ export function CreateFormStudent() {
                                 value={data.nationality}
                                 onChange={(e) => setData('nationality', e.target.value)}
                                 placeholder="Enter Nationality"
-                                error={formErrors.nationality}
+                                error={errors.nationality}
                             />
                             <InputField
                                 id="phone_number"
@@ -223,7 +211,7 @@ export function CreateFormStudent() {
                                 value={data.phone_number || ''}
                                 onChange={(e) => setData('phone_number', e.target.value || null)}
                                 placeholder="Enter Phone Number"
-                                error={formErrors.phone_number}
+                                error={errors.phone_number}
                             />
                             <InputField
                                 id="family_phone_number"
@@ -231,27 +219,21 @@ export function CreateFormStudent() {
                                 value={data.family_phone_number}
                                 onChange={(e) => setData('family_phone_number', e.target.value)}
                                 placeholder="Enter Family Phone Number"
-                                error={formErrors.family_phone_number}
+                                error={errors.family_phone_number}
                             />
                         </section>
                         <section className="w-full pt-10">
                             <section
-                                className="h-full w-full rounded-[6px] border border-dashed border-gray-400 cursor-pointer"
+                                className="h-full w-full cursor-pointer rounded-[6px] border border-dashed border-gray-400"
                                 onClick={handleSectionClick}
                             >
                                 <div className="flex h-full w-full flex-col items-center justify-center">
                                     {thumbnail ? (
-                                        <img
-                                            src={thumbnail}
-                                            alt="Uploaded"
-                                            className="h-full w-full rounded-[6px] object-cover"
-                                        />
+                                        <img src={thumbnail} alt="Uploaded" className="h-full w-full rounded-[6px] object-cover" />
                                     ) : (
                                         <>
                                             <LuUpload className="h-[50px] w-[50px] text-gray-400" />
-                                            <p className="text-gray-400 text-xl font-normal">
-                                                Drop file here or click to upload
-                                            </p>
+                                            <p className="text-xl font-normal text-gray-400">Drop file here or click to upload</p>
                                         </>
                                     )}
                                 </div>
@@ -263,20 +245,18 @@ export function CreateFormStudent() {
                                     accept="image/jpeg,image/png,image/jpg"
                                 />
                             </section>
-                            {formErrors.profile_image && (
-                                <span className="text-sm text-red-500">{formErrors.profile_image}</span>
-                            )}
+                            {errors.profile_image && <span className="text-sm text-red-500">{errors.profile_image}</span>}
                         </section>
                     </section>
                     <section className="flex w-full gap-5">
-                        <section className="w-full text-start space-y-2">
+                        <section className="w-full space-y-2 text-start">
                             <InputField
                                 id="mother_name"
                                 label="Mother's Name"
                                 value={data.mother_name}
                                 onChange={(e) => setData('mother_name', e.target.value)}
                                 placeholder="Enter Mother's Name"
-                                error={formErrors.mother_name}
+                                error={errors.mother_name}
                             />
                             <section className="space-y-2">
                                 <label className="block text-lg font-normal">
@@ -287,8 +267,8 @@ export function CreateFormStudent() {
                                         <Button
                                             variant="outline"
                                             className={cn(
-                                                'w-full justify-start text-left font-normal h-12',
-                                                !dateOfBirthMother && 'text-muted-foreground'
+                                                'h-12 w-full justify-start text-left font-normal',
+                                                !dateOfBirthMother && 'text-muted-foreground',
                                             )}
                                         >
                                             <CalendarIcon />
@@ -296,27 +276,20 @@ export function CreateFormStudent() {
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                            mode="single"
-                                            selected={dateOfBirthMother}
-                                            onSelect={setDateOfBirthMother}
-                                            initialFocus
-                                        />
+                                        <Calendar mode="single" selected={dateOfBirthMother} onSelect={setDateOfBirthMother} initialFocus />
                                     </PopoverContent>
                                 </Popover>
-                                {formErrors.date_of_birth_mother && (
-                                    <span className="text-sm text-red-500">{formErrors.date_of_birth_mother}</span>
-                                )}
+                                {errors.date_of_birth_mother && <span className="text-sm text-red-500">{errors.date_of_birth_mother}</span>}
                             </section>
                         </section>
-                        <section className="w-full text-start space-y-2">
+                        <section className="w-full space-y-2 text-start">
                             <InputField
                                 id="father_name"
                                 label="Father's Name"
                                 value={data.father_name}
                                 onChange={(e) => setData('father_name', e.target.value)}
                                 placeholder="Enter Father's Name"
-                                error={formErrors.father_name}
+                                error={errors.father_name}
                             />
                             <section className="space-y-2">
                                 <label className="block text-lg font-normal">
@@ -327,8 +300,8 @@ export function CreateFormStudent() {
                                         <Button
                                             variant="outline"
                                             className={cn(
-                                                'w-full justify-start text-left font-normal h-12',
-                                                !dateOfBirthFather && 'text-muted-foreground'
+                                                'h-12 w-full justify-start text-left font-normal',
+                                                !dateOfBirthFather && 'text-muted-foreground',
                                             )}
                                         >
                                             <CalendarIcon />
@@ -336,30 +309,23 @@ export function CreateFormStudent() {
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                            mode="single"
-                                            selected={dateOfBirthFather}
-                                            onSelect={setDateOfBirthFather}
-                                            initialFocus
-                                        />
+                                        <Calendar mode="single" selected={dateOfBirthFather} onSelect={setDateOfBirthFather} initialFocus />
                                     </PopoverContent>
                                 </Popover>
-                                {formErrors.date_of_birth_father && (
-                                    <span className="text-sm text-red-500">{formErrors.date_of_birth_father}</span>
-                                )}
+                                {errors.date_of_birth_father && <span className="text-sm text-red-500">{errors.date_of_birth_father}</span>}
                             </section>
                         </section>
                     </section>
                 </section>
 
-                {formErrors.message && <span className="mt-2 block text-sm text-red-500">{formErrors.message}</span>}
+                {/*{errors.message && <span className="mt-2 block text-sm text-red-500">{errors.message}</span>}*/}
 
                 <div className="mt-4 flex w-full justify-end space-x-4">
                     <Button type="button" variant="outline" onClick={() => reset()}>
                         Cancel
                     </Button>
-                    <Button type="submit" disabled={processing || buttonLoading || !isFormValid()}>
-                        {buttonLoading || processing ? 'Registering...' : 'Register'}
+                    <Button type="submit" disabled={processing || !isFormValid()}>
+                        {processing ? 'Registering...' : 'Register'}
                     </Button>
                 </div>
             </form>

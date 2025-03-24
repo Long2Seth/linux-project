@@ -28,7 +28,7 @@ class Student extends Model
         'is_deleted',
         'is_graduate',
         'is_status',
-
+        'family_phone_number',
     ];
 
     protected $casts = [

@@ -111,75 +111,23 @@ class StudentRegisterController extends Controller
         }
     }
 
-    public function enableStudent($id)
+    public function updateVerified(Request $request, $studentId)
     {
         try {
-            $studentRegister = StudentRegister::findOrFail($id);
+            $student = StudentRegister::findOrFail($studentId);
+            $student->update(['verified' => true]);
 
-            if ($studentRegister->verified) {
-                return redirect()->route('user.index')->with('message', 'Student is already enabled.');
-            }
-
-            $studentRegister->update(['verified' => true]);
-
-            // Create a new Student record using StudentController
-            $studentController = new StudentController();
-            $studentResponse = $studentController->createFromRegister($studentRegister);
-
-            if ($studentResponse->getStatusCode() !== 201) {
-                throw new \Exception('Failed to create student record in students table.');
-            }
-
-            return redirect()->route('students.index')
-                ->with('success', 'Student has been enabled and added to students table successfully.')
-                ->with('student', $studentRegister->toArray());
+            // Redirect to show, which will trigger the frontend to handle the next step
+            return redirect()->route('user.show', $studentId)
+                ->with('success', 'Student verification updated successfully');
         } catch (\Exception $e) {
-            \Log::error('Failed to enable student or create student record: ' . $e->getMessage(), [
-                'student_id' => $id,
-                'exception' => $e->getTraceAsString(),
+            \Log::error('Failed to update student verification: ' . $e->getMessage());
+            return redirect()->back()->withErrors([
+                'message' => 'Failed to update verification: ' . $e->getMessage()
             ]);
-
-            return redirect()->route('user.index')
-                ->withErrors(['message' => 'Failed to enable student or create student record: ' . $e->getMessage()]);
         }
     }
 
-    public function show($id)
-    {
-        try {
-            $student = StudentRegister::findOrFail($id);
-
-            return Inertia::render('StudentRegister/Show', [
-                'student' => [
-                    'id' => $student->id,
-                    'profile_image' => $student->profile_image,
-                    'slug' => $student->slug,
-                    'first_name' => $student->first_name,
-                    'last_name' => $student->last_name,
-                    'gender' => $student->gender,
-                    'date_of_birth' => $student->date_of_birth,
-                    'nationality' => $student->nationality,
-                    'place_of_birth' => $student->place_of_birth,
-                    'department_name' => $student->department_name,
-                    'phone_number' => $student->phone_number,
-                    'mother_name' => $student->mother_name,
-                    'father_name' => $student->father_name,
-                    'date_of_birth_mother' => $student->date_of_birth_mother,
-                    'date_of_birth_father' => $student->date_of_birth_father,
-                    'family_phone_number' => $student->family_phone_number,
-                    'verified' => $student->verified,
-                ],
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Failed to fetch student: ' . $e->getMessage(), [
-                'student_id' => $id,
-                'exception' => $e->getTraceAsString(),
-            ]);
-
-            return redirect()->route('user.index')
-                ->withErrors(['message' => 'Failed to fetch student: ' . $e->getMessage()]);
-        }
-    }
 
 
 }

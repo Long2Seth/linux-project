@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Student\EditStudent;
+use App\Http\Requests\Student\StudentRequest;
 use App\Http\Response\Student\StudentResponse;
 use App\Models\Student;
-use App\Models\StudentRegister;
-use Carbon\Carbon;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
@@ -19,10 +18,10 @@ class StudentController extends Controller
             $stats = [
                 'totalStudent' => Student::where('is_deleted', false)->count(),
                 'maleStudent' => Student::where('is_deleted', false)
-                    ->where('gender', 'male')
+                    ->where('gender', 'Male')
                     ->count(),
                 'femaleStudent' => Student::where('is_deleted', false)
-                    ->where('gender', 'female')
+                    ->where('gender', 'Female')
                     ->count(),
             ];
 
@@ -45,50 +44,27 @@ class StudentController extends Controller
         }
     }
 
-    public function createFromRegister(StudentRegister $studentRegister)
+    public function createFromRegister(StudentRequest $request)
     {
         try {
-            $studentData = [
-                'slug' => $studentRegister->slug,
-                'profile_image' => $studentRegister->profile_image,
-                'first_name' => $studentRegister->first_name,
-                'last_name' => $studentRegister->last_name,
-                'gender' => $studentRegister->gender,
-                'date_of_birth' => $studentRegister->date_of_birth,
-                'nationality' => $studentRegister->nationality,
-                'place_of_birth' => $studentRegister->place_of_birth,
-                'department_name' => $studentRegister->department_name,
-                'phone_number' => $studentRegister->phone_number,
-                'mother_name' => $studentRegister->mother_name,
-                'father_name' => $studentRegister->father_name,
-                'date_of_birth_mother' => $studentRegister->date_of_birth_mother,
-                'date_of_birth_father' => $studentRegister->date_of_birth_father,
-                'family_phone_number' => $studentRegister->family_phone_number,
-                // Additional fields required by Student table
-                'email' => strtolower("{$studentRegister->first_name}.{$studentRegister->last_name}." . Carbon::now()->year . "@gmail.rupp.kh"),
-                'address' => $studentRegister->address ?? 'N/A', // Default if not present
-                'start_date' => Carbon::now()->addMonth()->startOfMonth()->toDateString(),
-                'end_date' => Carbon::now()->addYears(4)->startOfMonth()->toDateString(),
-                'is_status' => true, // Active by default
-                'is_graduate' => false,
-                'is_deleted' => false,
-            ];
+            $validatedData = $request->validated();
 
-            $student = Student::create($studentData);
+            // Handle file upload if profile_image is present
+            if ($request->hasFile('profile_image')) {
+                $file = $request->file('profile_image');
+                $path = $file->store('profiles', 'public');
+                $validatedData['profile_image'] = $path;
+            }
 
-            return response()->json([
-                'success' => 'Student created successfully from register!',
-                'student_id' => $student->id,
-            ], 201);
+            $student = Student::create($validatedData);
+
         } catch (\Exception $e) {
-            \Log::error('Failed to create student from register: ' . $e->getMessage(), [
-                'student_register_id' => $studentRegister->id,
-                'exception' => $e->getTraceAsString(),
+            \Log::error('Failed to create student: ' . $e->getMessage(), [
+                'exception' => $e->getTraceAsString()
             ]);
-
             return response()->json([
-                'error' => 'Failed to create student from register: ' . $e->getMessage(),
-            ], 500);
+                'errors' => ['message' => 'Failed to create student: ' . $e->getMessage()]
+            ], 422);
         }
     }
 

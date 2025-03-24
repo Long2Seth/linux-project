@@ -10,7 +10,7 @@ class StudentRequest extends FormRequest
 {
     public function authorize()
     {
-        return true;
+        return true; // Adjust authorization logic if needed
     }
 
     public function rules(): array
@@ -18,12 +18,12 @@ class StudentRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'gender' => ['required', 'string', Rule::in(['male', 'female'])],
+            'gender' => ['required', 'string', Rule::in(['Male', 'Female'])],
             'date_of_birth' => ['required', 'date', 'before:today'],
-            'phone_number' => ['required', 'string', 'max:20', 'regex:/^[+]?[0-9]{8,15}$/'],
-            'address' => ['required', 'string', 'max:500'],
+            'phone_number' => ['nullable', 'string', 'max:20', 'regex:/^[+]?[0-9]{8,15}$/'],
+            'address' => ['nullable', 'string', 'max:500'],
             'slug' => ['required', 'string', 'unique:students,slug'],
-            'department_name' => ['required', 'string'],
+            'department_name' => ['required', 'string', 'max:255'],
             'nationality' => ['required', 'string', 'max:255'],
             'place_of_birth' => ['required', 'string', 'max:255'],
             'mother_name' => ['required', 'string', 'max:255'],
@@ -37,6 +37,7 @@ class StudentRequest extends FormRequest
             'is_status' => ['required', 'boolean'],
             'is_graduate' => ['required', 'boolean'],
             'is_deleted' => ['required', 'boolean'],
+            'profile_image' => ['nullable', 'file', 'image', 'max:2048'],
         ];
     }
 
@@ -45,16 +46,15 @@ class StudentRequest extends FormRequest
         $firstName = $this->input('first_name');
         $lastName = $this->input('last_name');
         $dateOfBirth = $this->input('date_of_birth');
-        $currentYear = Carbon::now()->year; // 2025 as of March 23, 2025
-        $startDate = Carbon::now()->addMonth()->startOfMonth(); // 1st day of next month
-        $endDate = $startDate->copy()->addYears(4); // 4 years after start_date
+        $currentYear = Carbon::now()->year;
+        $startDate = Carbon::now()->addMonth()->startOfMonth();
+        $endDate = $startDate->copy()->addYears(4);
 
         $this->merge([
             'slug' => strtolower($firstName . "-" . $lastName . "-" . str_replace('-', '', $dateOfBirth)),
-            'department_name' => 'Information Technology',
             'email' => strtolower($firstName . "." . $lastName . "." . $currentYear . "@gmail.rupp.kh"),
-            'start_date' => $startDate->toDateString(), // e.g., 2025-04-01 if today is 2025-03-23
-            'end_date' => $endDate->toDateString(), // e.g., 2029-04-01
+            'start_date' => $startDate->toDateString(),
+            'end_date' => $endDate->toDateString(),
             'is_status' => false,
             'is_graduate' => false,
             'is_deleted' => false,
